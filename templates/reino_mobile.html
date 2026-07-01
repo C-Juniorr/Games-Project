@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C87A;
+    --gold-dark: #8B6914;
+    --parchment: #F2E8D5;
+    --parchment-dark: #D4C4A0;
+    --ink: #1A1209;
+    --ink-light: #3D2E15;
+    --blood: #8B1A1A;
+    --blood-light: #C0392B;
+    --forest: #1A3D1A;
+    --forest-light: #2E7D32;
+    --sky: #1A2A4A;
+    --sky-light: #2E4D8B;
+    --stone: #2A2A2A;
+    --bg: #0D0A06;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'Crimson Text', Georgia, serif;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #game {
+    width: 380px;
+    max-width: 100vw;
+    height: 680px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #1A1208 0%, #0D0A06 70%);
+  }
+
+  #bg-scene {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #0D0A06 0%, #1A1208 40%, #0D0A06 100%);
+    overflow: hidden;
+  }
+  .arch {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    width: 260px; height: 300px;
+    top: -20px;
+    border: 2px solid rgba(201,168,76,0.12);
+    border-bottom: none;
+    border-radius: 130px 130px 0 0;
+  }
+  .arch::before {
+    content: '';
+    position: absolute;
+    inset: 12px 12px 0;
+    border: 1px solid rgba(201,168,76,0.07);
+    border-bottom: none;
+    border-radius: 120px 120px 0 0;
+  }
+  .candle {
+    position: absolute;
+    bottom: 0;
+    width: 6px;
+    border-radius: 3px 3px 0 0;
+  }
+  .candle::after {
+    content: '';
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 8px; height: 14px;
+    background: radial-gradient(ellipse, #FFEEA0 0%, #FF8C00 50%, transparent 100%);
+    border-radius: 50% 50% 30% 30%;
+    animation: flicker 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes flicker {
+    0% { opacity: 0.8; transform: translateX(-50%) scaleY(1); }
+    100% { opacity: 1; transform: translateX(-50%) scaleY(1.15) scaleX(0.9); }
+  }
+
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 14px 16px 10px;
+    background: linear-gradient(180deg, rgba(13,10,6,0.95) 0%, transparent 100%);
+    z-index: 10;
+  }
+  #year-display {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    opacity: 0.8;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  #stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .stat-icon { font-size: 16px; line-height: 1; }
+  .stat-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  #portrait-area {
+    position: absolute;
+    top: 110px; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
+    pointer-events: none;
+  }
+  #portrait-frame {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid rgba(201,168,76,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(13,10,6,0.8);
+    font-size: 36px;
+    position: relative;
+    transition: all 0.3s;
+  }
+  #portrait-frame::before {
+    content: '';
+    position: absolute; inset: -5px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  #char-name-label {
+    position: absolute;
+    bottom: -22px; left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    opacity: 0.7;
+  }
+
+  #hints {
+    position: absolute;
+    top: 208px; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 5;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .hint {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.3s, color 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .hint-arrow { font-size: 14px; }
+  .hint.left { color: #4CAF50; }
+  .hint.right { color: #E53935; }
+
+  #card-container {
+    position: absolute;
+    top: 230px;
+    left: 50%;
+    width: 320px;
+    transform: translateX(-50%);
+    z-index: 20;
+    cursor: grab;
+    will-change: transform;
+  }
+  #card-container.dragging { cursor: grabbing; }
+
+  #card {
+    width: 320px;
+    background: var(--parchment);
+    border-radius: 16px;
+    border: 1px solid rgba(201,168,76,0.4);
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.1);
+  }
+
+  #card-top-stripe {
+    height: 6px;
+    width: 100%;
+    transition: background 0.3s;
+  }
+  #card-inner { padding: 16px 20px 20px; }
+  #card-title {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  #card-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  #card-text {
+    font-family: 'Crimson Text', Georgia, serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-light);
+    text-align: center;
+    min-height: 72px;
+  }
+  #card-choices {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .choice-preview {
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .choice-label {
+    font-family: 'Cinzel', serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--ink-light);
+    margin-bottom: 4px;
+    opacity: 0.7;
+    text-transform: uppercase;
+  }
+  .choice-effects { display: flex; flex-direction: column; gap: 2px; }
+  .effect-line {
+    font-size: 11px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .effect-pos { color: #2E7D32; }
+  .effect-neg { color: #C62828; }
+  .effect-neu { color: #5D4037; }
+
+  #swipe-left-guide, #swipe-right-guide {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 50%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 15;
+  }
+  #swipe-left-guide {
+    left: 0;
+    background: linear-gradient(90deg, rgba(76,175,80,0.12) 0%, transparent 100%);
+  }
+  #swipe-right-guide {
+    right: 0;
+    background: linear-gradient(270deg, rgba(229,57,53,0.12) 0%, transparent 100%);
+  }
+
+  #buttons {
+    position: absolute;
+    bottom: 24px; left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    z-index: 10;
+  }
+  .action-btn {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .action-btn:active { transform: scale(0.92); }
+  #btn-yes {
+    background: linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%);
+    box-shadow: 0 4px 20px rgba(46,125,50,0.4);
+  }
+  #btn-no {
+    background: linear-gradient(135deg, #C62828 0%, #8B0000 100%);
+    box-shadow: 0 4px 20px rgba(198,40,40,0.4);
+  }
+  .btn-ring {
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .btn-label {
+    position: absolute;
+    bottom: -18px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    opacity: 0.6;
+  }
+  #btn-yes .btn-label { color: #81C784; }
+  #btn-no .btn-label { color: #EF9A9A; }
+
+  #flash {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 50;
+    transition: opacity 0.1s;
+  }
+
+  #game-over {
+    position: absolute; inset: 0;
+    background: rgba(13,10,6,0.97);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+  }
+  #game-over.visible { display: flex; }
+  #go-seal {
+    font-size: 52px;
+    margin-bottom: 12px;
+    animation: pulse-seal 2s ease-in-out infinite;
+  }
+  @keyframes pulse-seal {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+  #go-title {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  #go-subtitle {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  #go-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .go-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .go-stat-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .go-stat-val {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    display: block;
+  }
+  .go-stat-name { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+  #go-year {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 24px;
+  }
+  #btn-restart {
+    background: linear-gradient(135deg, #C9A84C 0%, #8B6914 100%);
+    border: none;
+    border-radius: 30px;
+    padding: 14px 40px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform 0.15s;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  }
+  #btn-restart:active { transform: scale(0.95); }
+
+  #intro {
+    position: absolute; inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 30px;
+  }
+  #intro-crown { font-size: 56px; margin-bottom: 16px; }
+  #intro-title {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  #intro-rule {
+    width: 120px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 10px auto 16px;
+  }
+  #intro-sub {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    color: rgba(255,255,255,0.45);
+    font-size: 15px;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+  #btn-start {
+    background: linear-gradient(135deg, #C9A84C 0%, #8B6914 100%);
+    border: none;
+    border-radius: 30px;
+    padding: 16px 48px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 0 6px 30px rgba(201,168,76,0.35);
+    transition: transform 0.15s;
+  }
+  #btn-start:active { transform: scale(0.95); }
+  #intro-footer {
+    position: absolute;
+    bottom: 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.2);
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+
+  <!-- Intro Screen -->
+  <div id="intro">
+    <div id="intro-crown">👑</div>
+    <div id="intro-title">REINO</div>
+    <div id="intro-rule"></div>
+    <div id="intro-sub">O destino do seu reino<br>repousa em suas mãos, Majestade.</div>
+    <button id="btn-start" onclick="startGame()">REINAR</button>
+    <div id="intro-footer">ARRASTE AS CARTAS PARA DECIDIR</div>
+  </div>
+
+  <!-- Background -->
+  <div id="bg-scene">
+    <div class="arch"></div>
+    <div class="candle" style="background:#3D2A1A;left:30px;height:60px;bottom:0;"></div>
+    <div class="candle" style="background:#3D2A1A;left:60px;height:45px;bottom:0;"></div>
+    <div class="candle" style="background:#3D2A1A;right:30px;height:60px;bottom:0;"></div>
+    <div class="candle" style="background:#3D2A1A;right:60px;height:45px;bottom:0;"></div>
+  </div>
+
+  <!-- Swipe guides -->
+  <div id="swipe-left-guide"></div>
+  <div id="swipe-right-guide"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="year-display">Ano do Reinado: <span id="year-val">1</span></div>
+    <div id="stats">
+      <div class="stat">
+        <div class="stat-icon">💰</div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-gold" style="background:#C9A84C;width:50%"></div></div>
+        <div class="stat-value" id="val-gold" style="color:#C9A84C">50</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">👥</div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-people" style="background:#4CAF50;width:50%"></div></div>
+        <div class="stat-value" id="val-people" style="color:#4CAF50">50</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">⚔️</div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-army" style="background:#EF5350;width:50%"></div></div>
+        <div class="stat-value" id="val-army" style="color:#EF5350">50</div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">⛪</div>
+        <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-faith" style="background:#7986CB;width:50%"></div></div>
+        <div class="stat-value" id="val-faith" style="color:#7986CB">50</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portrait -->
+  <div id="portrait-area">
+    <div id="portrait-frame">
+      <span id="char-emoji">👑</span>
+      <span id="char-name-label">CONSELHEIRO</span>
+    </div>
+  </div>
+
+  <!-- Decision hints -->
+  <div id="hints">
+    <div class="hint left" id="hint-left">
+      <span class="hint-arrow">←</span>
+      <span>ACEITAR</span>
+    </div>
+    <div class="hint right" id="hint-right">
+      <span>RECUSAR</span>
+      <span class="hint-arrow">→</span>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div id="card-container">
+    <div id="card">
+      <div id="card-top-stripe" style="background:var(--gold)"></div>
+      <div id="card-inner">
+        <div id="card-title">O Conselheiro</div>
+        <div id="card-divider"></div>
+        <div id="card-text">Carregando...</div>
+        <div id="card-choices">
+          <div class="choice-preview">
+            <div class="choice-label">← Aceitar</div>
+            <div class="choice-effects" id="effects-yes"></div>
+          </div>
+          <div class="choice-preview">
+            <div class="choice-label">Recusar →</div>
+            <div class="choice-effects" id="effects-no"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div id="buttons">
+    <button class="action-btn" id="btn-yes" onclick="choose('yes')">✓<div class="btn-ring"></div><span class="btn-label">ACEITAR</span></button>
+    <button class="action-btn" id="btn-no" onclick="choose('no')">✕<div class="btn-ring"></div><span class="btn-label">RECUSAR</span></button>
+  </div>
+
+  <!-- Flash -->
+  <div id="flash"></div>
+
+  <!-- Game Over -->
+  <div id="game-over">
+    <div id="go-seal">☠️</div>
+    <div id="go-title">SEU REINO CAIU</div>
+    <div id="go-subtitle">O reino não sobreviveu</div>
+    <div id="go-achievements"></div>
+    <div id="go-year">Reinado durou <span id="go-years">1</span> ano(s)</div>
+    <div id="go-stats">
+      <div class="go-stat"><span class="go-stat-icon">💰</span><span class="go-stat-val" id="go-gold">50</span><span class="go-stat-name">OURO</span></div>
+      <div class="go-stat"><span class="go-stat-icon">👥</span><span class="go-stat-val" id="go-people">50</span><span class="go-stat-name">POVO</span></div>
+      <div class="go-stat"><span class="go-stat-icon">⚔️</span><span class="go-stat-val" id="go-army">50</span><span class="go-stat-name">EXÉRCITO</span></div>
+      <div class="go-stat"><span class="go-stat-icon">⛪</span><span class="go-stat-val" id="go-faith">50</span><span class="go-stat-name">FÉ</span></div>
+    </div>
+    <button id="btn-restart" onclick="restartGame()">NOVO REINADO</button>
+  </div>
+
+</div>
+
+<script>
+
+const LEGENDARY_CARDS = [
+
+{
+  personagem:"Imperador",
+  emoji:"👑",
+  cor:"#FFD700",
+  titulo:"A Coroa Imperial",
+  texto:"\"Os reinos vizinhos desejam coroá-lo Imperador de toda a região.\"",
+  sim:{ouro:+30,povo:+20,exercito:+20,fe:+10},
+  nao:{ouro:-10,povo:-10,exercito:-10,fe:-10}
+},
+
+{
+  personagem:"Demônio",
+  emoji:"😈",
+  cor:"#8B0000",
+  titulo:"A Invasão Demoníaca",
+  texto:"\"Criaturas infernais atravessaram um portal sombrio.\"",
+  sim:{ouro:-20,povo:+5,exercito:-15,fe:+25},
+  nao:{ouro:0,povo:-30,exercito:-30,fe:-20}
+},
+
+{
+  personagem:"Explorador",
+  emoji:"🌎",
+  cor:"#0277BD",
+  titulo:"Novo Continente",
+  texto:"\"Nossos navegadores descobriram terras desconhecidas.\"",
+  sim:{ouro:+35,povo:+10,exercito:+5,fe:0},
+  nao:{ouro:-10,povo:-5,exercito:0,fe:0}
+},
+
+{
+  personagem:"Profeta",
+  emoji:"☄️",
+  cor:"#5E35B1",
+  titulo:"O Grande Cometa",
+  texto:"\"Um sinal celestial atravessa os céus.\"",
+  sim:{ouro:-10,povo:+10,exercito:0,fe:+30},
+  nao:{ouro:0,povo:-10,exercito:0,fe:-20}
+},
+
+{
+  personagem:"Dragão",
+  emoji:"🐉",
+  cor:"#C62828",
+  titulo:"A Última Batalha",
+  texto:"\"O dragão ancestral ameaça destruir a capital.\"",
+  sim:{ouro:-20,povo:+20,exercito:-20,fe:+10},
+  nao:{ouro:0,povo:-35,exercito:-25,fe:-10}
+},
+
+{
+  personagem:"Praga",
+  emoji:"☠️",
+  cor:"#424242",
+  titulo:"A Peste Negra",
+  texto:"\"Uma doença mortal espalha-se pelo reino.\"",
+  sim:{ouro:-25,povo:+20,exercito:-5,fe:+5},
+  nao:{ouro:+5,povo:-40,exercito:-10,fe:-10}
+},
+
+{
+  personagem:"Tesouro",
+  emoji:"💎",
+  cor:"#00ACC1",
+  titulo:"A Câmara Perdida",
+  texto:"\"Um tesouro esquecido foi encontrado sob o castelo.\"",
+  sim:{ouro:+40,povo:+5,exercito:0,fe:0},
+  nao:{ouro:-10,povo:0,exercito:0,fe:0}
+},
+
+{
+  personagem:"Papa",
+  emoji:"⛪",
+  cor:"#283593",
+  titulo:"A Cruzada Sagrada",
+  texto:"\"A Igreja convoca uma guerra santa.\"",
+  sim:{ouro:-15,povo:+5,exercito:+30,fe:+25},
+  nao:{ouro:+5,povo:-5,exercito:-20,fe:-20}
+},
+
+{
+  personagem:"Rainha",
+  emoji:"💍",
+  cor:"#AD1457",
+  titulo:"Casamento Real",
+  texto:"\"Uma poderosa princesa pede sua mão em casamento.\"",
+  sim:{ouro:+20,povo:+20,exercito:+15,fe:+10},
+  nao:{ouro:-15,povo:-10,exercito:-10,fe:-5}
+},
+
+{
+  personagem:"Arquimago",
+  emoji:"📜",
+  cor:"#6A1B9A",
+  titulo:"A Biblioteca Proibida",
+  texto:"\"Magias ancestrais foram encontradas sob as ruínas.\"",
+  sim:{ouro:+15,povo:+10,exercito:+10,fe:-30},
+  nao:{ouro:0,povo:-5,exercito:-5,fe:+15}
+}
+
+];
+
+const RARE_CARDS = [
+  {
+  personagem:"Dragão",
+  emoji:"🐉",
+  cor:"#B71C1C",
+  titulo:"O Dragão Vermelho",
+  texto:"\"Humano, pague tributos ou queimarei suas aldeias.\"",
+  sim:{ouro:-30,povo:+10,exercito:0,fe:-10},
+  nao:{ouro:0,povo:-20,exercito:-20,fe:+5}
+  },
+  {
+  personagem:"Fantasma",
+  emoji:"👻",
+  cor:"#455A64",
+  titulo:"O Rei Falecido",
+  texto:"\"Siga meus conselhos e viverá mais que eu.\"",
+  sim:{ouro:+10,povo:+10,exercito:+10,fe:+10},
+  nao:{ouro:-10,povo:-10,exercito:-10,fe:-10}
+  }
+  ];
+
+const CARDS = [
+  {
+    personagem:"General",emoji:"⚔️",cor:"#8B1A1A",
+    titulo:"O General Guerreiro",
+    texto:"\"Majestade, precisamos atacar o reino vizinho antes que eles nos ataquem. A honra está em jogo!\"",
+    sim:{ouro:-15,povo:-5,exercito:+20,fe:-5},
+    nao:{ouro:+5,povo:+10,exercito:-15,fe:+5}
+  },
+  {
+    personagem:"Bispo",emoji:"⛪",cor:"#2E4D8B",
+    titulo:"O Bispo Devoto",
+    texto:"\"Meu rei, o povo pede uma grande catedral. A alma do reino depende da nossa devoção.\"",
+    sim:{ouro:-20,povo:+10,exercito:0,fe:+25},
+    nao:{ouro:+5,povo:-10,exercito:0,fe:-20}
+  },
+  {
+    personagem:"Mercador",emoji:"💰",cor:"#5D4037",
+    titulo:"O Mercador Astuto",
+    texto:"\"Excelência, posso triplicar o comércio do reino — mas preciso de isenção de impostos por dez anos.\"",
+    sim:{ouro:+20,povo:+5,exercito:0,fe:-10},
+    nao:{ouro:-10,povo:0,exercito:0,fe:+5}
+  },
+  {
+    personagem:"Camponês",emoji:"🌾",cor:"#33691E",
+    titulo:"O Camponês Faminto",
+    texto:"\"Senhor, a seca destruiu as colheitas. O povo está com fome. Imploro por ajuda das reservas reais!\"",
+    sim:{ouro:-15,povo:+20,exercito:-5,fe:+10},
+    nao:{ouro:+10,povo:-25,exercito:0,fe:-15}
+  },
+  {
+    personagem:"Espião",emoji:"🕵️",cor:"#4A148C",
+    titulo:"O Espião Sombrio",
+    texto:"\"Majestade, há um traidor entre os nobres. Devo investigar... a qualquer custo necessário.\"",
+    sim:{ouro:-10,povo:-5,exercito:+10,fe:-10},
+    nao:{ouro:0,povo:+5,exercito:-5,fe:+5}
+  },
+  {
+    personagem:"Bruxo",emoji:"🧙",cor:"#006064",
+    titulo:"O Bruxo Misterioso",
+    texto:"\"Um segredo antigo pode multiplicar as colheitas. Mas os deuses cobram um preço por tal poder.\"",
+    sim:{ouro:+15,povo:+15,exercito:0,fe:-25},
+    nao:{ouro:0,povo:-5,exercito:0,fe:+10}
+  },
+  {
+    personagem:"Rainha Mãe",emoji:"👸",cor:"#880E4F",
+    titulo:"A Rainha Mãe",
+    texto:"\"Filho, é hora de casarmos você com a princesa do norte. A aliança fortalecerá o reino.\"",
+    sim:{ouro:+10,povo:+5,exercito:+10,fe:+5},
+    nao:{ouro:-5,povo:-5,exercito:-10,fe:-5}
+  },
+  {
+    personagem:"Pirata",emoji:"🏴‍☠️",cor:"#37474F",
+    titulo:"O Pirata Ousado",
+    texto:"\"Rei, ofereço minha frota para proteger seus mares. Em troca, quero apenas... alguns favores.\"",
+    sim:{ouro:-10,povo:0,exercito:+20,fe:-15},
+    nao:{ouro:0,povo:0,exercito:-5,fe:+5}
+  },
+  {
+    personagem:"Conselheiro",emoji:"📜",cor:"#827717",
+    titulo:"O Conselheiro Sábio",
+    texto:"\"Vossa Majestade, a biblioteca real está em ruínas. O conhecimento é a maior riqueza do reino.\"",
+    sim:{ouro:-12,povo:+8,exercito:0,fe:+8},
+    nao:{ouro:+5,povo:-5,exercito:0,fe:-5}
+  },
+  {
+    personagem:"Médico",emoji:"🎭",cor:"#1A237E",
+    titulo:"O Médico da Corte",
+    texto:"\"Uma praga se alastra nas aldeias do sul. Precisamos de remédios caros ou o povo morre.\"",
+    sim:{ouro:-20,povo:+25,exercito:-5,fe:+5},
+    nao:{ouro:+5,povo:-30,exercito:-5,fe:-10}
+  },
+  {
+    personagem:"Alquimista",emoji:"⚗️",cor:"#1B5E20",
+    titulo:"O Alquimista Real",
+    texto:"\"Descobri como transformar minério em ouro puro! Mas preciso de financiamento para o experimento.\"",
+    sim:{ouro:+30,povo:0,exercito:0,fe:-15},
+    nao:{ouro:-5,povo:0,exercito:0,fe:+5}
+  },
+  {
+    personagem:"Nobre",emoji:"🎩",cor:"#B71C1C",
+    titulo:"O Nobre Orgulhoso",
+    texto:"\"Majestade, os impostos sobre os nobres são insultantes! Reduzam-nos ou não lhe darei mais soldados.\"",
+    sim:{ouro:-15,povo:+5,exercito:+15,fe:0},
+    nao:{ouro:+10,povo:0,exercito:-20,fe:0}
+  },
+  {
+  personagem:"Bobo da Corte",emoji:"🤡",cor:"#FF6F00",
+  titulo:"O Bobo da Corte",
+  texto:"\"Majestade, o povo anda triste. Posso organizar um grande festival para alegrar o reino?\"",
+  sim:{ouro:-15,povo:+20,exercito:0,fe:-5},
+  nao:{ouro:+5,povo:-10,exercito:0,fe:+5}
+},
+{
+  personagem:"Cavaleiro",emoji:"🐎",cor:"#5D4037",
+  titulo:"O Cavaleiro Honrado",
+  texto:"\"Meu rei, um dragão aterroriza o norte. Permita-me liderar uma expedição.\"",
+  sim:{ouro:-10,povo:+15,exercito:-10,fe:+5},
+  nao:{ouro:0,povo:-15,exercito:+5,fe:-5}
+},
+{
+  personagem:"Mineiro",emoji:"⛏️",cor:"#795548",
+  titulo:"O Mineiro Ambicioso",
+  texto:"\"Encontramos uma nova mina de ouro. Precisamos investir para explorá-la.\"",
+  sim:{ouro:+25,povo:+5,exercito:0,fe:-5},
+  nao:{ouro:0,povo:-5,exercito:0,fe:0}
+},
+{
+  personagem:"Profeta",emoji:"🔮",cor:"#4527A0",
+  titulo:"O Profeta Louco",
+  texto:"\"Vejo uma grande calamidade chegando. Devemos preparar o reino imediatamente.\"",
+  sim:{ouro:-15,povo:+10,exercito:+10,fe:+5},
+  nao:{ouro:+5,povo:-10,exercito:-10,fe:-5}
+},
+{
+  personagem:"Prisioneiro",emoji:"⛓️",cor:"#424242",
+  titulo:"O Prisioneiro Misterioso",
+  texto:"\"Sou inocente! Se me libertar, revelarei um segredo valioso.\"",
+  sim:{ouro:+10,povo:+5,exercito:0,fe:-10},
+  nao:{ouro:0,povo:-5,exercito:+5,fe:+5}
+},
+{
+  personagem:"Embaixador",emoji:"🤝",cor:"#1565C0",
+  titulo:"O Embaixador Estrangeiro",
+  texto:"\"Nosso rei deseja uma aliança duradoura entre nossos povos.\"",
+  sim:{ouro:+10,povo:+10,exercito:+15,fe:0},
+  nao:{ouro:-5,povo:-5,exercito:-10,fe:0}
+},
+{
+  personagem:"Caçador",emoji:"🏹",cor:"#2E7D32",
+  titulo:"O Grande Caçador",
+  texto:"\"Há monstros nas florestas. Preciso de recursos para eliminá-los.\"",
+  sim:{ouro:-10,povo:+10,exercito:+5,fe:0},
+  nao:{ouro:0,povo:-10,exercito:-5,fe:0}
+},
+{
+  personagem:"Astrônomo",emoji:"🌙",cor:"#283593",
+  titulo:"O Astrônomo Real",
+  texto:"\"Os céus revelam segredos. Financie meu observatório.\"",
+  sim:{ouro:-12,povo:+5,exercito:0,fe:-5},
+  nao:{ouro:0,povo:-5,exercito:0,fe:+5}
+},
+{
+  personagem:"Orfão",emoji:"🧒",cor:"#6D4C41",
+  titulo:"A Criança Perdida",
+  texto:"\"Majestade, não tenho família nem comida. Pode ajudar?\"",
+  sim:{ouro:-5,povo:+15,exercito:0,fe:+10},
+  nao:{ouro:0,povo:-10,exercito:0,fe:-10}
+},
+{
+  personagem:"Inventor",emoji:"⚙️",cor:"#546E7A",
+  titulo:"O Inventor Excêntrico",
+  texto:"\"Criei uma máquina revolucionária! Preciso apenas de financiamento.\"",
+  sim:{ouro:-15,povo:+5,exercito:+15,fe:-5},
+  nao:{ouro:0,povo:-5,exercito:0,fe:0}
+},
+{
+  personagem:"Necromante",emoji:"💀",cor:"#212121",
+  titulo:"O Necromante",
+  texto:"\"Posso criar um exército que nunca se cansa. Basta permitir meus estudos.\"",
+  sim:{ouro:-5,povo:-20,exercito:+30,fe:-30},
+  nao:{ouro:0,povo:+5,exercito:-5,fe:+10}
+},
+{
+  personagem:"Druida",emoji:"🌳",cor:"#1B5E20",
+  titulo:"O Druida Ancião",
+  texto:"\"As florestas estão sendo destruídas. Devemos protegê-las.\"",
+  sim:{ouro:-10,povo:+10,exercito:-5,fe:+15},
+  nao:{ouro:+10,povo:-10,exercito:+5,fe:-10}
+},
+{
+  personagem:"Pirralho",emoji:"🐐",cor:"#8D6E63",
+  titulo:"O Garoto Travesso",
+  texto:"\"Majestade, posso ficar com sua cabra real?\"",
+  sim:{ouro:0,povo:+5,exercito:0,fe:0},
+  nao:{ouro:0,povo:-2,exercito:0,fe:0}
+},
+{
+  personagem:"Dragão",emoji:"🐉",cor:"#C62828",
+  titulo:"O Dragão Vermelho",
+  texto:"\"Humano, ofereça-me tributos e pouparei suas aldeias.\"",
+  sim:{ouro:-30,povo:+10,exercito:0,fe:-10},
+  nao:{ouro:0,povo:-20,exercito:-20,fe:+5}
+},
+{
+  personagem:"Mago",emoji:"✨",cor:"#4A148C",
+  titulo:"O Arquimago",
+  texto:"\"Posso criar uma barreira mágica protegendo todo o reino.\"",
+  sim:{ouro:-20,povo:+15,exercito:+10,fe:-10},
+  nao:{ouro:0,povo:-5,exercito:-10,fe:+5}
+},
+{
+  personagem:"Ferreiro",
+  emoji:"🔨",
+  cor:"#616161",
+  titulo:"O Ferreiro Real",
+  texto:"\"Majestade, posso forjar armas superiores para nossos soldados.\"",
+  sim:{ouro:-15,povo:0,exercito:+20,fe:0},
+  nao:{ouro:0,povo:0,exercito:-10,fe:0}
+},
+
+{
+  personagem:"Pescador",
+  emoji:"🎣",
+  cor:"#0277BD",
+  titulo:"O Pescador",
+  texto:"\"Os rios estão cheios de peixes. Financie novos barcos.\"",
+  sim:{ouro:+15,povo:+10,exercito:0,fe:0},
+  nao:{ouro:0,povo:-5,exercito:0,fe:0}
+},
+
+{
+  personagem:"Bárbaro",
+  emoji:"🪓",
+  cor:"#BF360C",
+  titulo:"O Chefe Bárbaro",
+  texto:"\"Junte-se a nós e lutaremos por seu reino.\"",
+  sim:{ouro:-10,povo:-5,exercito:+25,fe:-5},
+  nao:{ouro:0,povo:+5,exercito:-15,fe:0}
+},
+
+{
+  personagem:"Monge",
+  emoji:"🙏",
+  cor:"#5E35B1",
+  titulo:"O Monge Peregrino",
+  texto:"\"Desejo construir um santuário nas montanhas.\"",
+  sim:{ouro:-10,povo:+5,exercito:0,fe:+20},
+  nao:{ouro:+5,povo:-5,exercito:0,fe:-10}
+},
+
+{
+  personagem:"Lenhador",
+  emoji:"🪵",
+  cor:"#6D4C41",
+  titulo:"O Lenhador",
+  texto:"\"As florestas podem render muito ouro ao reino.\"",
+  sim:{ouro:+20,povo:+5,exercito:0,fe:-10},
+  nao:{ouro:0,povo:-5,exercito:0,fe:+5}
+},
+
+{
+  personagem:"Arquiteto",
+  emoji:"🏛️",
+  cor:"#455A64",
+  titulo:"O Arquiteto Real",
+  texto:"\"Posso construir estradas que ligarão todo o reino.\"",
+  sim:{ouro:-20,povo:+20,exercito:+5,fe:0},
+  nao:{ouro:0,povo:-10,exercito:0,fe:0}
+},
+
+{
+  personagem:"Mendigo",
+  emoji:"🧎",
+  cor:"#8D6E63",
+  titulo:"O Mendigo",
+  texto:"\"Majestade, estou faminto há dias.\"",
+  sim:{ouro:-5,povo:+10,exercito:0,fe:+5},
+  nao:{ouro:0,povo:-10,exercito:0,fe:-5}
+},
+
+{
+  personagem:"Capitão",
+  emoji:"🚢",
+  cor:"#1565C0",
+  titulo:"O Capitão Naval",
+  texto:"\"Precisamos expandir nossa frota marítima.\"",
+  sim:{ouro:-15,povo:+5,exercito:+15,fe:0},
+  nao:{ouro:0,povo:0,exercito:-10,fe:0}
+},
+
+{
+  personagem:"Gigante",
+  emoji:"🗿",
+  cor:"#37474F",
+  titulo:"O Gigante da Montanha",
+  texto:"\"Entreguem-me comida e deixarei suas aldeias em paz.\"",
+  sim:{ouro:-10,povo:+10,exercito:0,fe:0},
+  nao:{ouro:0,povo:-15,exercito:-10,fe:0}
+},
+
+{
+  personagem:"Assassino",
+  emoji:"🗡️",
+  cor:"#212121",
+  titulo:"O Assassino",
+  texto:"\"Posso eliminar um rival político por um preço justo.\"",
+  sim:{ouro:-10,povo:-10,exercito:+10,fe:-15},
+  nao:{ouro:0,povo:+5,exercito:-5,fe:+5}
+},
+
+{
+  personagem:"Tesoureiro",
+  emoji:"💎",
+  cor:"#00897B",
+  titulo:"O Tesoureiro",
+  texto:"\"Há despesas excessivas na corte. Posso cortá-las.\"",
+  sim:{ouro:+20,povo:-5,exercito:-5,fe:-5},
+  nao:{ouro:-10,povo:+5,exercito:+5,fe:+5}
+},
+
+{
+  personagem:"Bardo",
+  emoji:"🎵",
+  cor:"#FF8F00",
+  titulo:"O Bardo",
+  texto:"\"Posso espalhar canções exaltando sua grandeza.\"",
+  sim:{ouro:-10,povo:+15,exercito:0,fe:0},
+  nao:{ouro:0,povo:-5,exercito:0,fe:0}
+},
+
+{
+  personagem:"Caçador de Bruxas",
+  emoji:"🔥",
+  cor:"#D84315",
+  titulo:"O Caçador de Bruxas",
+  texto:"\"Há feiticeiros praticando magia proibida.\"",
+  sim:{ouro:-5,povo:-5,exercito:+5,fe:+20},
+  nao:{ouro:0,povo:+5,exercito:0,fe:-15}
+},
+
+{
+  personagem:"Anão",
+  emoji:"🍺",
+  cor:"#795548",
+  titulo:"O Senhor Anão",
+  texto:"\"Minhas minas podem enriquecer seu reino.\"",
+  sim:{ouro:+25,povo:+5,exercito:+5,fe:-5},
+  nao:{ouro:0,povo:-5,exercito:0,fe:0}
+},
+
+{
+  personagem:"Elfo",
+  emoji:"🧝",
+  cor:"#2E7D32",
+  titulo:"O Emissário Élfico",
+  texto:"\"Desejamos uma aliança entre nossos povos.\"",
+  sim:{ouro:+10,povo:+15,exercito:+10,fe:+5},
+  nao:{ouro:-5,povo:-10,exercito:-10,fe:0}
+}
+];
+let legendarySeen = new Set();
+let achievements = [];
+let gold=50,people=50,army=50,faith=50,year=1;
+let currentCard=null;
+let isAnimating=false;
+let isDrag=false,dragStartX=0,dragCurrentX=0,currentOffsetX=0;
+
+const cardCont=document.getElementById('card-container');
+const flashEl=document.getElementById('flash');
+
+function shuffleCards(){
+  const arr=[...CARDS];
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+let deck=shuffleCards(),deckIndex=0;
+
+function getLegendaryCard(){
+
+  if(legendarySeen.size >= LEGENDARY_CARDS.length){
+    legendarySeen.clear();
+  }
+
+  const available = LEGENDARY_CARDS.filter(
+    card => !legendarySeen.has(card.titulo)
+  );
+
+  const card = available[
+    Math.floor(Math.random() * available.length)
+  ];
+
+  legendarySeen.add(card.titulo);
+
+  return card;
+}
+
+function getNextCard(){
+
+  const roll = Math.random();
+
+  // 1% lendárias
+  if(roll < 0.01){
+    return getLegendaryCard();
+  }
+
+  // 5% raras
+  if(roll < 0.06){
+    return RARE_CARDS[
+      Math.floor(Math.random() * RARE_CARDS.length)
+    ];
+  }
+
+  if(deckIndex >= deck.length){
+    deck = shuffleCards();
+    deckIndex = 0;
+  }
+
+  return deck[deckIndex++];
+}
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function updateHUD(){
+  document.getElementById('year-val').textContent=year;
+  document.getElementById('bar-gold').style.width=gold+'%';
+  document.getElementById('val-gold').textContent=gold;
+  document.getElementById('bar-people').style.width=people+'%';
+  document.getElementById('val-people').textContent=people;
+  document.getElementById('bar-army').style.width=army+'%';
+  document.getElementById('val-army').textContent=army;
+  document.getElementById('bar-faith').style.width=faith+'%';
+  document.getElementById('val-faith').textContent=faith;
+}
+
+function renderEffects(id,effects){
+  const el=document.getElementById(id);
+  el.innerHTML='';
+  const icons={ouro:'💰',povo:'👥',exercito:'⚔️',fe:'⛪'};
+  let hasAny=false;
+  Object.entries(effects).forEach(([k,v])=>{
+    if(v===0)return;
+    hasAny=true;
+    const div=document.createElement('div');
+    div.className='effect-line '+(v>0?'effect-pos':'effect-neg');
+    div.textContent=(icons[k]||'')+(v>0?'+':'')+v;
+    el.appendChild(div);
+  });
+  if(!hasAny){
+    const div=document.createElement('div');
+    div.className='effect-line effect-neu';
+    div.textContent='—';
+    el.appendChild(div);
+  }
+}
+
+function resetCard(){
+  currentOffsetX=0;
+  cardCont.style.transition='transform 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+  cardCont.style.transform='translateX(-50%) rotate(0deg)';
+  document.getElementById('hint-left').style.opacity='0';
+  document.getElementById('hint-right').style.opacity='0';
+  document.getElementById('swipe-left-guide').style.opacity='0';
+  document.getElementById('swipe-right-guide').style.opacity='0';
+  setTimeout(()=>{cardCont.style.transition='';},400);
+}
+
+function loadCard(card){
+  currentCard=card;
+  document.getElementById('card-title').textContent=card.titulo;
+  document.getElementById('card-text').textContent=card.texto;
+  document.getElementById('card-top-stripe').style.background=card.cor;
+  document.getElementById('char-emoji').textContent=card.emoji;
+  document.getElementById('char-name-label').textContent=card.personagem.toUpperCase();
+  renderEffects('effects-yes',card.sim);
+  renderEffects('effects-no',card.nao);
+  resetCard();
+}
+
+function applyChoice(type){
+  if(!currentCard||isAnimating)return;
+  isAnimating=true;
+  const effects=type==='yes'?currentCard.sim:currentCard.nao;
+
+  Object.entries(effects).forEach(([k,v])=>{
+    if(k==='ouro')gold=clamp(gold+v,0,100);
+    else if(k==='povo')people=clamp(people+v,0,100);
+    else if(k==='exercito')army=clamp(army+v,0,100);
+    else if(k==='fe')faith=clamp(faith+v,0,100);
+  });
+  year++;
+  if(year === 10 && !achievements.includes("10 anos")){
+    achievements.push("10 anos");
+  }
+
+  if(year === 25 && !achievements.includes("25 anos")){
+    achievements.push("25 anos");
+  }
+
+  if(gold >= 100 && !achievements.includes("Rei Rico")){
+    achievements.push("Rei Rico");
+  }
+  if(year === 50 && !achievements.includes("Lenda Viva")){
+    achievements.push("Lenda Viva");
+  }
+
+  if(year === 100 && !achievements.includes("Dinastia Eterna")){
+    achievements.push("Dinastia Eterna");
+  }
+
+  if(gold === 100 && !achievements.includes("Tesouro Real")){
+    achievements.push("Tesouro Real");
+  }
+
+  if(people === 100 && !achievements.includes("Amado pelo Povo")){
+    achievements.push("Amado pelo Povo");
+  }
+
+  if(army === 100 && !achievements.includes("Senhor da Guerra")){
+    achievements.push("Senhor da Guerra");
+  }
+
+  if(faith === 100 && !achievements.includes("Escolhido dos Deuses")){
+    achievements.push("Escolhido dos Deuses");
+  }
+  updateHUD();
+
+  const col=type==='yes'?'rgba(76,175,80,0.25)':'rgba(229,57,53,0.25)';
+  flashEl.style.background=col;
+  flashEl.style.opacity='1';
+  setTimeout(()=>{flashEl.style.opacity='0';},200);
+
+  const dir=type==='yes'?-1:1;
+  cardCont.style.transition='transform 0.35s cubic-bezier(0.55,0,1,0.45), opacity 0.35s';
+  cardCont.style.transform=`translateX(calc(-50% + ${dir*420}px)) rotate(${dir*18}deg)`;
+  cardCont.style.opacity='0';
+
+  setTimeout(()=>{
+    if(checkGameOver())return;
+    cardCont.style.transition='none';
+    cardCont.style.transform='translateX(-50%) translateY(40px) scale(0.95)';
+    cardCont.style.opacity='0';
+    const next=getNextCard();
+    loadCard(next);
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        cardCont.style.transition='transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s';
+        cardCont.style.transform='translateX(-50%) translateY(0) scale(1)';
+        cardCont.style.opacity='1';
+        setTimeout(()=>{cardCont.style.transition='';isAnimating=false;},450);
+      });
+    });
+  },360);
+}
+
+let gameOverReason = "";
+
+function checkGameOver(){
+
+  if(gold <= 0){
+    gameOverReason = "Os cofres reais secaram. Os nobres abandonaram o reino.";
+    showGameOver();
+    return true;
+  }
+
+  if(people <= 0){
+    gameOverReason = "O povo se revoltou e invadiu o castelo.";
+    showGameOver();
+    return true;
+  }
+
+  if(army <= 0){
+    gameOverReason = "O exército desertou e um golpe militar tomou o trono.";
+    showGameOver();
+    return true;
+  }
+
+  if(faith <= 0){
+    gameOverReason = "A Igreja declarou você herege.";
+    showGameOver();
+    return true;
+  }
+
+  return false;
+}
+
+function showGameOver(){
+  document.getElementById("go-achievements").innerHTML =
+  achievements.length
+  ? "<br>🏆 " + achievements.join("<br>🏆 ")
+  : "";
+  const reasons={
+    gold:'O ouro real esgotou-se',
+    people:'O povo se rebelou',
+    army:'O exército desertou',
+    faith:'A fé no reino morreu'
+  };
+  let reason='O reino entrou em colapso';
+  if(gold<=0)reason=reasons.gold;
+  else if(people<=0)reason=reasons.people;
+  else if(army<=0)reason=reasons.army;
+  else if(faith<=0)reason=reasons.faith;
+
+  document.getElementById('go-subtitle').textContent=gameOverReason;;
+  document.getElementById('go-years').textContent=year-1;
+  document.getElementById('go-gold').textContent=gold;
+  document.getElementById('go-people').textContent=people;
+  document.getElementById('go-army').textContent=army;
+  document.getElementById('go-faith').textContent=faith;
+  document.getElementById('go-seal').textContent=year>20?'🏆':year>10?'👑':'☠️';
+
+  setTimeout(()=>{
+    document.getElementById('game-over').classList.add('visible');
+  },400);
+  isAnimating=false;
+}
+
+function updateDrag(dx){
+  const rot=dx*0.04;
+  cardCont.style.transform=`translateX(calc(-50% + ${dx}px)) rotate(${rot}deg)`;
+  currentOffsetX=dx;
+  const pct=Math.min(Math.abs(dx)/120,1);
+  if(dx<-20){
+    document.getElementById('hint-left').style.opacity=Math.min(pct*2,1);
+    document.getElementById('hint-right').style.opacity='0';
+    document.getElementById('swipe-left-guide').style.opacity=pct*0.8;
+    document.getElementById('swipe-right-guide').style.opacity='0';
+  } else if(dx>20){
+    document.getElementById('hint-right').style.opacity=Math.min(pct*2,1);
+    document.getElementById('hint-left').style.opacity='0';
+    document.getElementById('swipe-right-guide').style.opacity=pct*0.8;
+    document.getElementById('swipe-left-guide').style.opacity='0';
+  } else {
+    document.getElementById('hint-left').style.opacity='0';
+    document.getElementById('hint-right').style.opacity='0';
+    document.getElementById('swipe-left-guide').style.opacity='0';
+    document.getElementById('swipe-right-guide').style.opacity='0';
+  }
+}
+
+function endDrag(){
+  if(!isDrag||isAnimating)return;
+  isDrag=false;
+  cardCont.classList.remove('dragging');
+  const dx=currentOffsetX;
+  if(dx<-80)applyChoice('yes');
+  else if(dx>80)applyChoice('no');
+  else resetCard();
+}
+
+// Touch events
+cardCont.addEventListener('touchstart',e=>{
+  if(isAnimating)return;
+  isDrag=true;
+  dragStartX=e.touches[0].clientX;
+  cardCont.style.transition='none';
+},{passive:true});
+cardCont.addEventListener('touchmove',e=>{
+  if(!isDrag||isAnimating)return;
+  updateDrag(e.touches[0].clientX-dragStartX);
+},{passive:true});
+cardCont.addEventListener('touchend',endDrag);
+
+// Mouse events
+cardCont.addEventListener('mousedown',e=>{
+  if(isAnimating)return;
+  isDrag=true;
+  dragStartX=e.clientX;
+  cardCont.style.transition='none';
+  cardCont.classList.add('dragging');
+});
+window.addEventListener('mousemove',e=>{
+  if(!isDrag||isAnimating)return;
+  updateDrag(e.clientX-dragStartX);
+});
+window.addEventListener('mouseup',endDrag);
+
+function choose(type){
+  if(isAnimating||gold<=0||people<=0||army<=0||faith<=0)return;
+  const dir=type==='yes'?-1:1;
+  cardCont.style.transition='transform 0.2s ease-out';
+  cardCont.style.transform=`translateX(calc(-50% + ${dir*60}px)) rotate(${dir*5}deg)`;
+  setTimeout(()=>{applyChoice(type);},80);
+}
+
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  deck=shuffleCards();deckIndex=0;
+  loadCard(getNextCard());
+  updateHUD();
+}
+
+function restartGame(){
+   legendarySeen.clear();
+  achievements = [];
+  gold=50;people=50;army=50;faith=50;year=1;
+  isAnimating=false;
+  document.getElementById('game-over').classList.remove('visible');
+  deck=shuffleCards();deckIndex=0;
+  updateHUD();
+  cardCont.style.opacity='1';
+  cardCont.style.transform='translateX(-50%)';
+  loadCard(getNextCard());
+}
+</script>
+</body>
+</html>

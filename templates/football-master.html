@@ -1,0 +1,2323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Master</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   RESET & BASE
+============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-deep:    #060D1A;
+  --bg-card:    rgba(15, 23, 42, 0.85);
+  --bg-glass:   rgba(255,255,255,0.04);
+  --border:     rgba(255,255,255,0.08);
+  --neon:       #2563EB;
+  --neon-glow:  rgba(37,99,235,0.45);
+  --gold:       #FBBF24;
+  --gold-glow:  rgba(251,191,36,0.35);
+  --green:      #22C55E;
+  --green-glow: rgba(34,197,94,0.35);
+  --red:        #EF4444;
+  --red-glow:   rgba(239,68,68,0.35);
+  --white:      #FFFFFF;
+  --muted:      rgba(255,255,255,0.45);
+  --font-head:  'Barlow Condensed', sans-serif;
+  --font-body:  'Inter', sans-serif;
+  --radius:     16px;
+  --radius-sm:  10px;
+  --transition: 0.25s cubic-bezier(.4,0,.2,1);
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* =============================================
+   BACKGROUND
+============================================= */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(37,99,235,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(251,191,36,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(34,197,94,0.05) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Pitch lines subtle */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none; z-index: 0;
+}
+
+/* =============================================
+   SCREENS
+============================================= */
+.screen {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 40px;
+  animation: fadeIn .35s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================
+   GLASS CARD
+============================================= */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+.card.glow-blue  { box-shadow: 0 0 30px var(--neon-glow),  0 4px 24px rgba(0,0,0,.5); border-color: rgba(37,99,235,0.3); }
+.card.glow-gold  { box-shadow: 0 0 30px var(--gold-glow),  0 4px 24px rgba(0,0,0,.5); border-color: rgba(251,191,36,0.3); }
+.card.glow-green { box-shadow: 0 0 30px var(--green-glow), 0 4px 24px rgba(0,0,0,.5); border-color: rgba(34,197,94,0.3); }
+
+/* =============================================
+   BUTTONS
+============================================= */
+.btn {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px 28px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0);
+  transition: var(--transition);
+}
+.btn:hover::after { background: rgba(255,255,255,0.08); }
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563EB 50%, #3b82f6 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-glow), 0 2px 8px rgba(0,0,0,.4);
+}
+.btn-primary:hover { box-shadow: 0 6px 30px rgba(37,99,235,.65), 0 2px 8px rgba(0,0,0,.4); transform: translateY(-2px); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #d97706 0%, #FBBF24 50%, #fcd34d 100%);
+  color: #0F172A;
+  box-shadow: 0 4px 20px var(--gold-glow), 0 2px 8px rgba(0,0,0,.4);
+}
+.btn-gold:hover { box-shadow: 0 6px 30px rgba(251,191,36,.65), 0 2px 8px rgba(0,0,0,.4); transform: translateY(-2px); }
+
+.btn-green {
+  background: linear-gradient(135deg, #16a34a 0%, #22C55E 50%, #4ade80 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--green-glow), 0 2px 8px rgba(0,0,0,.4);
+}
+.btn-green:hover { box-shadow: 0 6px 30px rgba(34,197,94,.65), 0 2px 8px rgba(0,0,0,.4); transform: translateY(-2px); }
+
+.btn-ghost {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  box-shadow: none;
+}
+.btn-ghost:hover { color: var(--white); border-color: rgba(255,255,255,0.25); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #b91c1c 0%, #EF4444 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--red-glow);
+}
+
+.btn-sm { font-size: 0.85rem; padding: 9px 18px; }
+.btn-lg { font-size: 1.2rem; padding: 18px 40px; }
+.btn-full { width: 100%; justify-content: center; }
+
+/* =============================================
+   HOME SCREEN
+============================================= */
+#screen-home {
+  justify-content: flex-start;
+  padding-top: 40px;
+}
+
+.home-logo {
+  margin-bottom: 8px;
+  animation: logoDrop .6s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes logoDrop {
+  from { opacity: 0; transform: scale(.6) translateY(-20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.logo-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #1d4ed8, #FBBF24);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 0 40px rgba(37,99,235,0.5), 0 0 80px rgba(251,191,36,0.2);
+  margin: 0 auto 16px;
+  position: relative;
+}
+.logo-icon::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(#2563EB, #FBBF24, #22C55E, #2563EB);
+  z-index: -1;
+  animation: rotateBorder 3s linear infinite;
+}
+@keyframes rotateBorder {
+  to { transform: rotate(360deg); }
+}
+
+.home-title {
+  font-family: var(--font-head);
+  font-size: clamp(2.4rem, 8vw, 4rem);
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1;
+  background: linear-gradient(135deg, #fff 30%, #FBBF24 70%, #fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 12px rgba(251,191,36,0.3));
+  margin-bottom: 4px;
+}
+
+.home-subtitle {
+  text-align: center;
+  font-size: .85rem;
+  color: var(--muted);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+/* Player stats bar */
+.player-bar {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-pill {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.stat-pill .stat-val {
+  font-family: var(--font-head);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--gold);
+  line-height: 1;
+}
+.stat-pill .stat-lbl {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-top: 2px;
+}
+
+/* XP bar */
+.xp-bar-wrap {
+  width: 100%;
+  max-width: 480px;
+  margin-bottom: 28px;
+}
+.xp-bar-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: .75rem; color: var(--muted); margin-bottom: 6px;
+  letter-spacing: .06em;
+}
+.xp-bar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563EB, #22C55E);
+  border-radius: 99px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* Game mode cards */
+.modes-wrap {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.mode-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.mode-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--accent, #2563EB);
+  opacity: 0;
+  transition: var(--transition);
+}
+.mode-card:hover::before { opacity: 1; }
+.mode-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.18); }
+
+.mode-card.quiz  { --accent: #2563EB; }
+.mode-card.guess { --accent: #FBBF24; }
+
+.mode-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.mode-card.quiz  .mode-icon { background: rgba(37,99,235,0.2);  }
+.mode-card.guess .mode-icon { background: rgba(251,191,36,0.15); }
+
+.mode-info { flex: 1; }
+.mode-title {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.mode-desc { font-size: .8rem; color: var(--muted); line-height: 1.4; }
+.mode-badge {
+  font-family: var(--font-head);
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  flex-shrink: 0;
+}
+.mode-card.quiz  .mode-badge { background: rgba(37,99,235,0.2);  color: #60a5fa; border: 1px solid rgba(37,99,235,0.3); }
+.mode-card.guess .mode-badge { background: rgba(251,191,36,0.15); color: #fcd34d; border: 1px solid rgba(251,191,36,0.3); }
+
+/* Quick actions */
+.quick-actions {
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* =============================================
+   TOP BAR (in-game)
+============================================= */
+.topbar {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-title {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.coins-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(251,191,36,0.12);
+  border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-family: var(--font-head);
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* =============================================
+   QUIZ SCREEN
+============================================= */
+.quiz-wrap {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.quiz-meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.quiz-progress-wrap {
+  flex: 1;
+}
+.quiz-progress-label {
+  font-size: .72rem;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.quiz-progress-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.quiz-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563EB, #22C55E);
+  border-radius: 99px;
+  transition: width .4s ease;
+}
+
+.timer-circle {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: conic-gradient(#2563EB var(--pct,100%), rgba(255,255,255,0.08) 0%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.timer-circle::before {
+  content: '';
+  position: absolute;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--bg-deep);
+}
+.timer-num {
+  position: relative; z-index: 1;
+}
+
+/* Score pills */
+.score-row {
+  display: flex; gap: 8px;
+}
+.score-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-family: var(--font-head);
+  font-size: .85rem;
+  font-weight: 700;
+}
+.score-pill.correct  { color: var(--green); border-color: rgba(34,197,94,.25); background: rgba(34,197,94,.08); }
+.score-pill.wrong    { color: var(--red);   border-color: rgba(239,68,68,.25);  background: rgba(239,68,68,.08); }
+
+/* Question card */
+.question-card {
+  width: 100%;
+  text-align: center;
+  padding: 28px 24px 24px;
+}
+.question-category {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #60a5fa;
+  background: rgba(37,99,235,0.12);
+  border: 1px solid rgba(37,99,235,0.2);
+  border-radius: 99px;
+  padding: 3px 12px;
+  margin-bottom: 16px;
+}
+.question-text {
+  font-family: var(--font-head);
+  font-size: clamp(1.1rem, 3.5vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--white);
+  letter-spacing: .02em;
+}
+
+/* Options */
+.options-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .options-grid { grid-template-columns: 1fr; }
+}
+
+.option-btn {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: .9rem;
+  font-weight: 500;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.option-btn:hover:not(:disabled) {
+  background: rgba(37,99,235,0.12);
+  border-color: rgba(37,99,235,0.35);
+  transform: translateY(-1px);
+}
+.option-btn:disabled { cursor: default; }
+.option-btn.correct {
+  background: rgba(34,197,94,0.15) !important;
+  border-color: var(--green) !important;
+  box-shadow: 0 0 18px var(--green-glow);
+  animation: correctPop .3s cubic-bezier(.34,1.56,.64,1);
+}
+.option-btn.wrong {
+  background: rgba(239,68,68,0.15) !important;
+  border-color: var(--red) !important;
+  animation: shake .35s ease;
+}
+@keyframes correctPop {
+  from { transform: scale(1); }
+  50%  { transform: scale(1.04); }
+  to   { transform: scale(1); }
+}
+@keyframes shake {
+  0%,100%  { transform: translateX(0); }
+  20%,60%  { transform: translateX(-5px); }
+  40%,80%  { transform: translateX(5px); }
+}
+
+.option-letter {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-size: .85rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+/* Feedback overlay */
+.feedback-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.feedback-overlay.show { opacity: 1; pointer-events: none; }
+.feedback-bubble {
+  font-family: var(--font-head);
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 900;
+  letter-spacing: .04em;
+  padding: 18px 40px;
+  border-radius: 20px;
+  animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+.feedback-bubble.correct {
+  background: rgba(34,197,94,0.2);
+  border: 2px solid var(--green);
+  color: var(--green);
+  text-shadow: 0 0 30px var(--green);
+}
+.feedback-bubble.wrong {
+  background: rgba(239,68,68,0.2);
+  border: 2px solid var(--red);
+  color: var(--red);
+  text-shadow: 0 0 30px var(--red);
+}
+@keyframes popIn {
+  from { transform: scale(.4); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* =============================================
+   QUEM SOU EU SCREEN
+============================================= */
+.guess-wrap {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.guess-header {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Clues card */
+.clues-card {
+  width: 100%;
+  padding: 24px;
+}
+.clues-title {
+  font-family: var(--font-head);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.clue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  animation: clueAppear .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes clueAppear {
+  from { opacity: 0; transform: translateX(-15px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.clue-num {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: rgba(251,191,36,0.15);
+  border: 1px solid rgba(251,191,36,0.25);
+  color: var(--gold);
+  font-family: var(--font-head);
+  font-size: .85rem;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.clue-text {
+  font-size: .9rem;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.85);
+}
+.clue-locked {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.2);
+  font-size: .8rem;
+  margin-bottom: 8px;
+}
+
+/* Points indicator */
+.points-indicator {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.15);
+  margin-top: 8px;
+}
+.pts-label { font-size: .75rem; color: var(--muted); }
+.pts-value {
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--green);
+}
+
+/* Answer input area */
+.answer-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.answer-input-wrap {
+  display: flex; gap: 10px;
+}
+.answer-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: .95rem;
+  outline: none;
+  transition: var(--transition);
+}
+.answer-input:focus {
+  border-color: var(--neon);
+  background: rgba(37,99,235,0.07);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+}
+.answer-input::placeholder { color: var(--muted); }
+
+.reveal-btn-area {
+  display: flex; gap: 8px;
+}
+
+/* =============================================
+   RESULTS SCREEN
+============================================= */
+.results-wrap {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.trophy-display {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.trophy-icon {
+  font-size: 64px;
+  animation: trophyBounce .6s cubic-bezier(.34,1.56,.64,1);
+  display: block;
+  filter: drop-shadow(0 0 20px var(--gold-glow));
+}
+@keyframes trophyBounce {
+  from { transform: scale(0) rotate(-15deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+.result-title {
+  font-family: var(--font-head);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 8px;
+  text-shadow: 0 0 20px var(--gold-glow);
+}
+.result-subtitle {
+  font-size: .85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.result-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.result-stat {
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.result-stat-val {
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.result-stat-lbl {
+  font-size: .68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* Gains display */
+.gains-card {
+  width: 100%;
+  padding: 18px 20px;
+}
+.gains-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.gains-row:last-child { border-bottom: none; }
+.gains-lbl { font-size: .85rem; color: var(--muted); }
+.gains-val {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.gains-val.gold  { color: var(--gold); }
+.gains-val.green { color: var(--green); }
+.gains-val.blue  { color: #60a5fa; }
+
+/* =============================================
+   RANKING SCREEN
+============================================= */
+.ranking-wrap {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: var(--transition);
+}
+.rank-item:hover { border-color: rgba(255,255,255,0.15); }
+.rank-pos {
+  font-family: var(--font-head);
+  font-size: 1.3rem;
+  font-weight: 900;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.rank-pos.p1 { color: var(--gold); }
+.rank-pos.p2 { color: #94a3b8; }
+.rank-pos.p3 { color: #cd7f32; }
+
+.rank-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #FBBF24);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.rank-info { flex: 1; min-width: 0; }
+.rank-name {
+  font-weight: 600;
+  font-size: .95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-level { font-size: .72rem; color: var(--muted); }
+
+.rank-score {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--gold);
+}
+
+/* =============================================
+   ACHIEVEMENTS SCREEN
+============================================= */
+.achievements-grid {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 400px) {
+  .achievements-grid { grid-template-columns: 1fr; }
+}
+
+.achievement-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-glass);
+  transition: var(--transition);
+}
+.achievement-item.unlocked {
+  border-color: rgba(251,191,36,0.3);
+  background: rgba(251,191,36,0.06);
+}
+.achievement-item.locked { opacity: 0.4; }
+.ach-icon { font-size: 1.8rem; flex-shrink: 0; }
+.ach-info .ach-name {
+  font-weight: 600;
+  font-size: .82rem;
+  line-height: 1.3;
+}
+.ach-info .ach-desc { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+
+/* =============================================
+   SECTION HEADINGS
+============================================= */
+.section-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.section-head h2 {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.section-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* =============================================
+   COIN FLOAT ANIMATION
+============================================= */
+.coin-float {
+  position: fixed;
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--gold);
+  pointer-events: none;
+  z-index: 9999;
+  animation: floatUp .9s ease forwards;
+  text-shadow: 0 0 10px var(--gold-glow);
+}
+@keyframes floatUp {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-70px) scale(1.3); }
+}
+
+/* =============================================
+   MODAL
+============================================= */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  width: 100%; max-width: 380px;
+  background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(6,13,26,0.98));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.7);
+  transform: scale(.9);
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.modal-overlay.open .modal-box { transform: scale(1); }
+.modal-title {
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+.modal-body { font-size: .9rem; color: var(--muted); margin-bottom: 20px; line-height: 1.55; }
+.modal-answer {
+  font-family: var(--font-head);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--gold);
+  margin: 14px 0;
+  text-shadow: 0 0 16px var(--gold-glow);
+}
+.modal-actions { display: flex; gap: 10px; flex-direction: column; }
+
+/* =============================================
+   NAME INPUT MODAL
+============================================= */
+.name-input-modal {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  transition: opacity .25s;
+}
+.name-box {
+  background: linear-gradient(145deg, rgba(15,23,42,0.98), rgba(6,13,26,0.98));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  padding: 36px 28px;
+  width: 100%; max-width: 360px;
+  text-align: center;
+}
+.name-box h2 {
+  font-family: var(--font-head);
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.name-box p { font-size: .85rem; color: var(--muted); margin-bottom: 20px; }
+.name-box .answer-input { text-align: center; font-size: 1.1rem; }
+
+/* =============================================
+   NOTIFICATION TOAST
+============================================= */
+.toast {
+  position: fixed;
+  top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: rgba(15,23,42,0.95);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: .85rem;
+  font-weight: 600;
+  z-index: 500;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap;
+  backdrop-filter: blur(20px);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(34,197,94,.4); color: var(--green); }
+.toast.info    { border-color: rgba(37,99,235,.4);  color: #60a5fa; }
+.toast.gold    { border-color: rgba(251,191,36,.4); color: var(--gold); }
+
+/* =============================================
+   GUESS ANSWER REVEAL
+============================================= */
+.guess-correct-anim {
+  animation: guessBurst .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes guessBurst {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+/* =============================================
+   UTIL
+============================================= */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-2 { gap: 8px; }
+.mt-1 { margin-top: 8px; }
+.text-center { text-align: center; }
+.text-muted { color: var(--muted); }
+.font-head { font-family: var(--font-head); }
+
+/* =============================================
+   EMPTY STATE
+============================================= */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+.empty-state p { font-size: .9rem; }
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media (max-width: 480px) {
+  .player-bar { grid-template-columns: repeat(3,1fr); }
+  .result-stats { grid-template-columns: repeat(3,1fr); }
+  .card { padding: 20px 16px; }
+  .btn-lg { font-size: 1rem; padding: 15px 28px; }
+}
+
+/* =============================================
+   SCROLLBAR
+============================================= */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     FEEDBACK OVERLAY
+========================================================= -->
+<div class="feedback-overlay" id="feedbackOverlay">
+  <div class="feedback-bubble" id="feedbackBubble"></div>
+</div>
+
+<!-- =========================================================
+     TOAST
+========================================================= -->
+<div class="toast" id="toast"></div>
+
+<!-- =========================================================
+     NAME MODAL (first time)
+========================================================= -->
+<div class="name-input-modal" id="nameModal">
+  <div class="name-box">
+    <div style="font-size:3rem;margin-bottom:12px;">⚽</div>
+    <h2>Football Master</h2>
+    <p>Digite seu nome para começar a jornada</p>
+    <input class="answer-input" id="nameInput" placeholder="Seu nome de jogador..." maxlength="20" autocomplete="off">
+    <div style="margin-top:16px;">
+      <button class="btn btn-gold btn-full btn-lg" onclick="saveName()">ENTRAR NO CAMPO 🏆</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     ANSWER MODAL (wrong guess)
+========================================================= -->
+<div class="modal-overlay" id="answerModal">
+  <div class="modal-box">
+    <div style="font-size:3rem;margin-bottom:10px;" id="modalEmoji">🔍</div>
+    <div class="modal-title" id="modalTitle">Quem era?</div>
+    <div class="modal-body" id="modalBody">Não conseguiu desta vez!</div>
+    <div class="modal-answer" id="modalAnswer">Resposta</div>
+    <div class="modal-actions">
+      <button class="btn btn-gold btn-full" onclick="nextGuess()">PRÓXIMO PERSONAGEM ▶</button>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="goHome()">Voltar ao Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: HOME
+========================================================= -->
+<div class="screen active" id="screen-home">
+  <div class="home-logo">
+    <div class="logo-icon">⚽</div>
+  </div>
+  <div class="home-title">Football Master</div>
+  <div class="home-subtitle">⚡ O Jogo dos Craque do Futebol ⚡</div>
+
+  <!-- Player stats -->
+  <div class="player-bar">
+    <div class="stat-pill">
+      <div class="stat-val" id="home-level">1</div>
+      <div class="stat-lbl">Nível</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-val" id="home-coins">0</div>
+      <div class="stat-lbl">Moedas</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-val" id="home-score">0</div>
+      <div class="stat-lbl">Pontos</div>
+    </div>
+  </div>
+
+  <!-- XP Bar -->
+  <div class="xp-bar-wrap">
+    <div class="xp-bar-label">
+      <span id="home-player-name">Jogador</span>
+      <span id="home-xp-label">0 / 100 XP</span>
+    </div>
+    <div class="xp-bar-track">
+      <div class="xp-bar-fill" id="home-xp-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Mode cards -->
+  <div class="modes-wrap">
+    <div class="mode-card quiz" onclick="startQuiz()">
+      <div class="mode-icon">🏆</div>
+      <div class="mode-info">
+        <div class="mode-title">Quiz Copa do Mundo</div>
+        <div class="mode-desc">Teste seus conhecimentos sobre as Copas do Mundo. Campeões, artilheiros e recordes!</div>
+      </div>
+      <div class="mode-badge">10 perguntas</div>
+    </div>
+
+    <div class="mode-card guess" onclick="startGuess()">
+      <div class="mode-icon">🕵️</div>
+      <div class="mode-info">
+        <div class="mode-title">Quem Sou Eu?</div>
+        <div class="mode-desc">Adivinhe jogadores, técnicos e lendas pelas dicas progressivas. Menos dicas = mais pontos!</div>
+      </div>
+      <div class="mode-badge">Infinito</div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="quick-actions">
+    <button class="btn btn-ghost" onclick="showScreen('screen-ranking')">🏅 Ranking</button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-achievements')">🎖️ Conquistas</button>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: QUIZ
+========================================================= -->
+<div class="screen" id="screen-quiz">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="confirmQuit('quiz')">← Sair</button>
+      <span class="topbar-title">Quiz Copa</span>
+    </div>
+    <div class="coins-badge">🪙 <span id="quiz-coins">0</span></div>
+  </div>
+
+  <div class="quiz-wrap">
+    <!-- Meta: progress + timer -->
+    <div class="quiz-meta">
+      <div class="quiz-progress-wrap">
+        <div class="quiz-progress-label">Pergunta <span id="q-current">1</span> de <span id="q-total">10</span></div>
+        <div class="quiz-progress-track">
+          <div class="quiz-progress-fill" id="q-progress" style="width:10%"></div>
+        </div>
+      </div>
+      <div class="score-row">
+        <div class="score-pill correct">✓ <span id="q-correct">0</span></div>
+        <div class="score-pill wrong">✗ <span id="q-wrong">0</span></div>
+      </div>
+      <div class="timer-circle" id="timerCircle" style="--pct:100%">
+        <span class="timer-num" id="timerNum">20</span>
+      </div>
+    </div>
+
+    <!-- Question card -->
+    <div class="card glow-blue question-card" id="questionCard">
+      <div class="question-category" id="q-category">Categoria</div>
+      <div class="question-text" id="q-text">Carregando pergunta...</div>
+    </div>
+
+    <!-- Options -->
+    <div class="options-grid" id="optionsGrid"></div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: QUEM SOU EU
+========================================================= -->
+<div class="screen" id="screen-guess">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="confirmQuit('guess')">← Sair</button>
+      <span class="topbar-title">Quem Sou Eu?</span>
+    </div>
+    <div class="coins-badge">🪙 <span id="guess-coins">0</span></div>
+  </div>
+
+  <div class="guess-wrap">
+    <!-- Score header -->
+    <div class="guess-header">
+      <div class="score-pill correct">✓ <span id="g-correct">0</span> acertos</div>
+      <div class="score-pill" style="color: var(--gold); border-color: rgba(251,191,36,.25); background: rgba(251,191,36,.08);">
+        ⭐ <span id="g-score">0</span> pts
+      </div>
+      <div class="score-pill">
+        🔢 <span id="g-num">0</span>º
+      </div>
+    </div>
+
+    <!-- Clues card -->
+    <div class="card glow-gold clues-card">
+      <div class="clues-title">🔍 Pistas disponíveis</div>
+      <div id="clues-list"><!-- js renders here --></div>
+      <div class="points-indicator">
+        <span class="pts-label">Pontos se acertar agora:</span>
+        <span class="pts-value" id="pts-now">300</span>
+      </div>
+    </div>
+
+    <!-- Controls: reveal next clue -->
+    <div class="reveal-btn-area">
+      <button class="btn btn-ghost btn-sm" id="revealBtn" onclick="revealNextClue()">💡 Próxima dica (-50pts)</button>
+      <button class="btn btn-danger btn-sm" onclick="giveUp()">🏳️ Desistir</button>
+    </div>
+
+    <!-- Answer area -->
+    <div class="answer-area">
+      <div class="answer-input-wrap">
+        <input class="answer-input" id="guessInput" placeholder="Digite o nome..." autocomplete="off"
+               onkeydown="if(event.key==='Enter') submitGuess()">
+        <button class="btn btn-gold" onclick="submitGuess()">Responder</button>
+      </div>
+    </div>
+
+    <!-- Category tag -->
+    <div style="width:100%; text-align:center;">
+      <span class="question-category" id="guess-category">Categoria</span>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: RESULTS
+========================================================= -->
+<div class="screen" id="screen-results">
+  <div class="results-wrap">
+    <div class="trophy-display">
+      <span class="trophy-icon" id="result-trophy">🏆</span>
+      <div class="result-title" id="result-title">Excelente!</div>
+      <div class="result-subtitle" id="result-subtitle">Você completou o quiz</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="result-stats">
+      <div class="result-stat">
+        <div class="result-stat-val" style="color:var(--green)" id="res-correct">0</div>
+        <div class="result-stat-lbl">Acertos</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-val" style="color:var(--red)" id="res-wrong">0</div>
+        <div class="result-stat-lbl">Erros</div>
+      </div>
+      <div class="result-stat">
+        <div class="result-stat-val" style="color:var(--gold)" id="res-pct">0%</div>
+        <div class="result-stat-lbl">Precisão</div>
+      </div>
+    </div>
+
+    <!-- Gains -->
+    <div class="card gains-card" style="width:100%">
+      <div class="gains-row">
+        <span class="gains-lbl">💰 Moedas ganhas</span>
+        <span class="gains-val gold" id="res-coins">+0</span>
+      </div>
+      <div class="gains-row">
+        <span class="gains-lbl">⭐ XP ganho</span>
+        <span class="gains-val green" id="res-xp">+0</span>
+      </div>
+      <div class="gains-row">
+        <span class="gains-lbl">📊 Pontuação</span>
+        <span class="gains-val blue" id="res-score">0</span>
+      </div>
+      <div class="gains-row">
+        <span class="gains-lbl">🎯 Nível atual</span>
+        <span class="gains-val gold" id="res-level">1</span>
+      </div>
+    </div>
+
+    <!-- Achievements unlocked this round -->
+    <div id="new-achievements" style="width:100%"></div>
+
+    <div style="display:flex; gap:10px; width:100%; flex-direction:column;">
+      <button class="btn btn-primary btn-full btn-lg" onclick="restartMode()">🔄 Jogar Novamente</button>
+      <button class="btn btn-ghost btn-full" onclick="goHome()">🏠 Menu Principal</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: RANKING
+========================================================= -->
+<div class="screen" id="screen-ranking">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="goHome()">← Voltar</button>
+      <span class="topbar-title">Ranking</span>
+    </div>
+  </div>
+
+  <div class="ranking-wrap" id="ranking-list">
+    <div class="empty-state">
+      <div class="icon">🏅</div>
+      <p>Nenhuma pontuação ainda.<br>Jogue para entrar no ranking!</p>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     SCREEN: ACHIEVEMENTS
+========================================================= -->
+<div class="screen" id="screen-achievements">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="goHome()">← Voltar</button>
+      <span class="topbar-title">Conquistas</span>
+    </div>
+  </div>
+  <div class="achievements-grid" id="achievements-grid"></div>
+</div>
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+<script>
+// =============================================
+// DATA - QUIZ QUESTIONS
+// =============================================
+const QUIZ_QUESTIONS = [
+  // === CAMPEÕES E FINAIS ===
+  { category: "Campeões", text: "Qual seleção ganhou mais Copas do Mundo?", options: ["Brasil","Alemanha","Argentina","Itália"], answer: 0 },
+  { category: "Campeões", text: "Qual foi o primeiro país a vencer uma Copa do Mundo fora de seu continente?", options: ["Brasil","Espanha","Alemanha","Argentina"], answer: 0 },
+  { category: "Campeões", text: "Quem venceu a Copa do Mundo de 2022?", options: ["França","Brasil","Argentina","Croácia"], answer: 2 },
+  { category: "Campeões", text: "Qual seleção ganhou a Copa do Mundo de 2018?", options: ["Alemanha","França","Bélgica","Croácia"], answer: 1 },
+  { category: "Campeões", text: "A Alemanha ganhou quantas Copas do Mundo ao total?", options: ["3","4","5","2"], answer: 1 },
+  { category: "Finais", text: "Onde foi realizada a final da Copa de 2014?", options: ["Rio de Janeiro","São Paulo","Berlim","Brasília"], answer: 0 },
+  { category: "Finais", text: "Qual foi o placar da final da Copa de 1970 (Brasil x Itália)?", options: ["4-1","3-1","4-0","2-1"], answer: 0 },
+  { category: "Finais", text: "Qual seleção perdeu 3 finais de Copa do Mundo?", options: ["França","Holanda","Argentina","Hungria"], answer: 1 },
+  { category: "Finais", text: "Em que ano a Copa do Mundo foi realizada no Brasil pela segunda vez?", options: ["2010","2014","2002","2018"], answer: 1 },
+
+  // === ARTILHEIROS ===
+  { category: "Artilheiros", text: "Quem é o maior artilheiro da história das Copas do Mundo?", options: ["Ronaldo","Messi","Miroslav Klose","Pelé"], answer: 2 },
+  { category: "Artilheiros", text: "Quantos gols Miroslav Klose marcou em Copas?", options: ["15","16","14","17"], answer: 1 },
+  { category: "Artilheiros", text: "Quem ganhou a Chuteira de Ouro na Copa de 2018?", options: ["Messi","Cristiano Ronaldo","Harry Kane","Lukaku"], answer: 2 },
+  { category: "Artilheiros", text: "Quem foi artilheiro da Copa de 2022?", options: ["Messi","Mbappé","Giroud","Benzema"], answer: 1 },
+  { category: "Artilheiros", text: "Pelé marcou quantos gols em Copas do Mundo?", options: ["10","12","14","16"], answer: 2 },
+  { category: "Artilheiros", text: "Quem marcou 4 gols na semifinal da Copa de 2014 pelo Brasil?", options: ["Neymar","Müller","Klose","Özil"], answer: 1 },
+
+  // === SELEÇÕES ===
+  { category: "Seleções", text: "Qual seleção é conhecida como 'Les Bleus'?", options: ["Bélgica","França","Itália","Suécia"], answer: 1 },
+  { category: "Seleções", text: "Qual seleção ficou em 4º lugar nas Copas de 2010, 2014 e 2018?", options: ["Bélgica","Holanda","Uruguai","Argentina"], answer: 0 },
+  { category: "Seleções", text: "Qual país sediou a Copa de 2002?", options: ["China e Coreia do Sul","Japão e Coreia do Sul","China e Japão","Japão e China"], answer: 1 },
+  { category: "Seleções", text: "Qual seleção europeia nunca ganhou uma Copa do Mundo?", options: ["Espanha","Itália","Portugal","Alemanha"], answer: 2 },
+  { category: "Seleções", text: "O Brasil teve qual resultado no 7x1 de 2014?", options: ["Derrota por 5x1","Derrota por 7x1","Derrota por 6x1","Derrota por 8x1"], answer: 1 },
+  { category: "Seleções", text: "Qual foi o único país africano a chegar às semifinais de uma Copa?", options: ["Senegal","Camarões","Marrocos","Gana"], answer: 2 },
+  { category: "Seleções", text: "Qual seleção foi eliminada na fase de grupos em 2014, sendo campeã vigente?", options: ["Itália","França","Espanha","Inglaterra"], answer: 2 },
+
+  // === RECORDES ===
+  { category: "Recordes", text: "Qual foi o maior placar da história das Copas do Mundo?", options: ["7x0","8x0","9x0","10x0"], answer: 0 },
+  { category: "Recordes", text: "Qual goleiro mais disputou jogos em Copas do Mundo?", options: ["Buffon","Ceni","Sepp Maier","Iker Casillas"], answer: 0 },
+  { category: "Recordes", text: "Qual jogador ganhou mais Copas do Mundo?", options: ["Pelé","Zidane","Cafu","Ronaldo"], answer: 0 },
+  { category: "Recordes", text: "Qual a menor torcida registrada numa Copa do Mundo?", options: ["Copa 1950","Copa 1930","Copa 1934","Copa 1938"], answer: 1 },
+  { category: "Recordes", text: "Quantas edições da Copa do Mundo já foram disputadas até 2022?", options: ["20","21","22","23"], answer: 2 },
+
+  // === JOGADORES LENDÁRIOS ===
+  { category: "Lendas", text: "Qual jogador é apelidado de 'O Rei do Futebol'?", options: ["Maradona","Pelé","Ronaldo","Zidane"], answer: 1 },
+  { category: "Lendas", text: "Quem marcou o 'Gol do Século' na Copa de 1986?", options: ["Pelé","Maradona","Ronaldo","Zidane"], answer: 1 },
+  { category: "Lendas", text: "Qual foi a seleção de Maradona?", options: ["Uruguai","Brasil","Argentina","Paraguai"], answer: 2 },
+  { category: "Lendas", text: "Ronaldo Fenômeno ganhou quantas Copas?", options: ["1","2","3","0"], answer: 1 },
+  { category: "Lendas", text: "Quem foi eleito melhor jogador da Copa de 1998?", options: ["Ronaldo","Zidane","Roberto Carlos","Bergkamp"], answer: 1 },
+  { category: "Lendas", text: "Qual jogador venceu a Bola de Ouro da Copa de 2022?", options: ["Mbappé","Modric","Messi","De Bruyne"], answer: 2 },
+  { category: "Lendas", text: "Ronaldo R9 marcou quantos gols na Copa de 2002?", options: ["6","7","8","9"], answer: 2 },
+  { category: "Lendas", text: "Qual jogador disputou 5 Copas do Mundo pelo México?", options: ["Borgetti","Blanco","Hugo Sánchez","Rafa Márquez"], answer: 3 },
+
+  // === HISTÓRICO ===
+  { category: "História", text: "Em que ano foi disputada a primeira Copa do Mundo?", options: ["1928","1930","1934","1926"], answer: 1 },
+  { category: "História", text: "Qual país sediou a primeira Copa do Mundo?", options: ["Argentina","Brasil","Uruguai","Chile"], answer: 2 },
+  { category: "História", text: "Qual foi o nome do estádio que sediou a Copa de 1950 no Brasil?", options: ["Maracanã","Pacaembu","Mineirão","Morumbi"], answer: 0 },
+  { category: "História", text: "Em que Copa o Brasil ganhou o tricampeonato?", options: ["1966","1970","1974","1978"], answer: 1 },
+  { category: "História", text: "A Copa de 2026 será sediada em quantos países?", options: ["1","2","3","4"], answer: 2 },
+];
+
+// =============================================
+// DATA - QUEM SOU EU
+// =============================================
+const GUESS_PEOPLE = [
+  {
+    name: "Lionel Messi",
+    category: "Jogador",
+    clues: [
+      "Sou argentino e comecei a jogar futebol na Europa ainda criança.",
+      "Fui tratado com hormônio do crescimento para poder me desenvolver como atleta.",
+      "Joguei a maior parte da minha carreira no Barcelona.",
+      "Ganhei a Copa do Mundo em 2022, completando minha trajetória.",
+      "Sou considerado por muitos o melhor jogador da história."
+    ]
+  },
+  {
+    name: "Cristiano Ronaldo",
+    category: "Jogador",
+    clues: [
+      "Sou português e cresci na Ilha da Madeira.",
+      "Me destaco por minha dedicação física e mentalidade vencedora.",
+      "Joguei no Manchester United, Real Madrid, Juventus e voltei ao United.",
+      "Sou o maior artilheiro da história da Seleção Portuguesa.",
+      "Minhas comemorações incluem o famoso 'SIUUUU'."
+    ]
+  },
+  {
+    name: "Pelé",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro e fui campeão mundial em 1958, 1962 e 1970.",
+      "Marquei mais de 1.000 gols ao longo da carreira.",
+      "Defendi uma única equipe por quase toda minha carreira no Brasil.",
+      "Sou chamado de 'O Rei do Futebol'.",
+      "Joguei no Santos FC e no New York Cosmos."
+    ]
+  },
+  {
+    name: "Maradona",
+    category: "Lenda",
+    clues: [
+      "Sou argentino e fui campeão do mundo em 1986.",
+      "Marquei o famoso 'Gol do Século' e o 'Gol da Mão de Deus'.",
+      "Joguei no Napoli e levei o clube ao título italiano.",
+      "Sou considerado um dos maiores de todos os tempos.",
+      "Meu número de camisa famoso é o 10."
+    ]
+  },
+  {
+    name: "Ronaldo Fenômeno",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro e fui artilheiro da Copa de 2002 com 8 gols.",
+      "Sofri um colapso misterioso antes da final da Copa de 1998.",
+      "Joguei no Barcelona, Inter de Milão e Real Madrid.",
+      "Ganhei duas Copas do Mundo pelo Brasil.",
+      "Meu apelido é 'O Fenômeno'."
+    ]
+  },
+  {
+    name: "Zinedine Zidane",
+    category: "Lenda",
+    clues: [
+      "Sou francês de origem argelina e nasci em Marselha.",
+      "Marquei 2 gols de cabeça na final da Copa de 1998.",
+      "Joguei no Juventus e no Real Madrid, clube onde também treinei.",
+      "Fui expulso com cabeçada em minha última final de Copa.",
+      "Ganhei 3 Champions League como técnico do Real Madrid."
+    ]
+  },
+  {
+    name: "Neymar Jr.",
+    category: "Jogador",
+    clues: [
+      "Sou brasileiro e estreei no Santos FC com apenas 17 anos.",
+      "Fui vendido ao Barcelona por valor recorde na época.",
+      "Minha transferência ao PSG bateu o recorde mundial de 222 milhões de euros.",
+      "Sofri lesão e fui desfalque em partes importantes das Copas de 2014 e 2022.",
+      "Sou conhecido pelas minhas dribles e habilidade fora de série."
+    ]
+  },
+  {
+    name: "Kylian Mbappé",
+    category: "Jogador",
+    clues: [
+      "Sou francês e fui campeão do mundo em 2018 com apenas 19 anos.",
+      "Sou o artilheiro da Copa do Mundo de 2022.",
+      "Joguei no Monaco antes de ser contratado pelo PSG.",
+      "Marquei um hat-trick na final da Copa de 2022.",
+      "Fui contratado pelo Real Madrid em 2024."
+    ]
+  },
+  {
+    name: "Luka Modrić",
+    category: "Jogador",
+    clues: [
+      "Sou croata e fui eleito o melhor jogador do mundo em 2018.",
+      "Levei a Croácia à final da Copa do Mundo de 2018.",
+      "Jogo no Real Madrid há mais de uma década.",
+      "Encerrei a hegemonia de Messi e Ronaldo na Bola de Ouro.",
+      "Sou conhecido pelo meu talento em administrar o meio-campo."
+    ]
+  },
+  {
+    name: "Ronaldinho Gaúcho",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro nascido em Porto Alegre.",
+      "Fui eleito o melhor jogador do mundo em 2004 e 2005.",
+      "Meus dribles e sorrisos encantaram o mundo no Barcelona.",
+      "Fui campeão do mundo pelo Brasil em 2002.",
+      "Meu estilo alegre e criativo ficou marcado no futebol mundial."
+    ]
+  },
+  {
+    name: "Cafu",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro e fui capitão do Brasil nas Copas de 1998 e 2002.",
+      "Sou o único jogador a disputar três finais consecutivas de Copa do Mundo.",
+      "Joguei no São Paulo, Roma e Milan durante a carreira.",
+      "Era conhecido pelas minhas subidas pela lateral direita.",
+      "Levantei a taça da Copa de 2002 como capitão."
+    ]
+  },
+  {
+    name: "Romário",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro e fui campeão do mundo em 1994.",
+      "Fui eleito melhor jogador do mundo em 1994.",
+      "Joguei no Barcelona, PSV e Flamengo, entre outros clubes.",
+      "Sou famoso por minha frieza na hora de finalizar.",
+      "Marquei mais de 1.000 gols ao longo da carreira."
+    ]
+  },
+  {
+    name: "Guardiola",
+    category: "Técnico",
+    clues: [
+      "Sou espanhol e fui jogador antes de me tornar técnico.",
+      "Revolucionei o futebol com meu estilo de posse de bola.",
+      "Fui campeão com Barcelona, Bayern de Munique e Manchester City.",
+      "Meu futebol é chamado de 'tiki-taka'.",
+      "Ganhei a Champions League como técnico pelo Barcelona em 2009 e 2011."
+    ]
+  },
+  {
+    name: "Tite",
+    category: "Técnico",
+    clues: [
+      "Sou brasileiro e fui técnico da Seleção Brasileira de 2016 a 2022.",
+      "Fui campeão da Copa Libertadores pelo Corinthians em 2012.",
+      "Levei o Brasil às quartas de final da Copa de 2018 e 2022.",
+      "Meu nome completo é Adenor Leonardo Bacchi.",
+      "Fui considerado um dos melhores técnicos do mundo em 2019."
+    ]
+  },
+  {
+    name: "Seleção Alemã",
+    category: "Seleção",
+    clues: [
+      "Sou europeu e tenho 4 títulos mundiais.",
+      "Minha conquista mais recente foi em 2014 no Brasil.",
+      "Apliquei um placar histórico de 7x1 na semifinal de 2014.",
+      "Minhas cores são preto, vermelho e amarelo.",
+      "Sou chamado de 'Die Mannschaft' (A Seleção)."
+    ]
+  },
+  {
+    name: "Seleção Francesa",
+    category: "Seleção",
+    clues: [
+      "Sou europeu com 2 títulos mundiais (1998 e 2018).",
+      "Na Copa de 2022, perdi a final nos pênaltis.",
+      "Tenho grandes jogadores como Zidane, Platini e Mbappé.",
+      "Minhas cores são azul, branco e vermelho.",
+      "Sou chamado de 'Les Bleus'."
+    ]
+  },
+  {
+    name: "Roberto Carlos",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro e fui campeão do mundo em 1994 e 2002.",
+      "Sou famoso pelo meu chute poderoso pela lateral esquerda.",
+      "Joguei por muitos anos no Real Madrid ao lado de Figo, Zidane e Ronaldo.",
+      "Meu gol de falta contra a França em 1997 é um dos mais lembrados da história.",
+      "Era lateral-esquerdo mas atacava como um jogador de meio-campo."
+    ]
+  },
+  {
+    name: "Ronaldo Nazário",
+    category: "Lenda",
+    clues: [
+      "Sou brasileiro, não confunda com Cristiano Ronaldo.",
+      "Fui considerado o melhor do mundo três vezes: 1997, 1998 e 2002.",
+      "Meu corte de cabelo na Copa de 2002 foi um fenômeno mundial.",
+      "Joguei no Barcelona, Inter de Milão e Real Madrid.",
+      "Meu apelido começa com a letra F."
+    ]
+  },
+];
+
+// =============================================
+// GAME STATE
+// =============================================
+let state = {
+  playerName: '',
+  level: 1,
+  xp: 0,
+  coins: 0,
+  totalScore: 0,
+  achievements: {},
+  quizHistory: [],
+  guesHistory: [],
+  rankingData: []
+};
+
+const XP_PER_LEVEL = 100;
+const COIN_CORRECT = 15;
+const XP_CORRECT = 10;
+
+// Quiz session
+let quiz = {
+  questions: [],
+  current: 0,
+  correct: 0,
+  wrong: 0,
+  timer: null,
+  timeLeft: 20,
+  answered: false,
+  sessionCoins: 0,
+  sessionXP: 0,
+  sessionScore: 0
+};
+
+// Guess session
+let guess = {
+  current: null,
+  revealedClues: 0,
+  sessionCorrect: 0,
+  sessionScore: 0,
+  sessionCoins: 0,
+  used: new Set(),
+  currentPts: 300
+};
+
+let currentMode = '';
+
+// =============================================
+// ACHIEVEMENTS DEFINITION
+// =============================================
+const ACHIEVEMENTS_DEF = [
+  { id: 'first_correct',  icon: '⚽', name: 'Primeiro Gol',      desc: 'Acerte sua primeira pergunta' },
+  { id: 'quiz_complete',  icon: '🏆', name: 'Especialista em Copas', desc: 'Complete um quiz inteiro' },
+  { id: 'perfect_quiz',   icon: '💯', name: 'Perfeccionista',     desc: 'Acerte todas as 10 perguntas' },
+  { id: 'first_guess',    icon: '🕵️', name: 'Detetive',          desc: 'Acerte no Quem Sou Eu?' },
+  { id: 'guess_first_clue', icon:'🎯', name: 'Farejador',         desc: 'Acerte com apenas 1 dica' },
+  { id: 'score_500',      icon: '📈', name: 'Pontuação 500',      desc: 'Alcance 500 pontos no total' },
+  { id: 'score_2000',     icon: '🚀', name: 'Mestre do Quiz',     desc: 'Alcance 2000 pontos no total' },
+  { id: 'level_5',        icon: '⭐', name: 'Nível 5',           desc: 'Alcance o nível 5' },
+  { id: 'coins_100',      icon: '🪙', name: 'Milionário',        desc: 'Acumule 100 moedas' },
+  { id: 'streak_5',       icon: '🔥', name: 'Em Chamas',         desc: '5 acertos seguidos no quiz' },
+  { id: 'guess_5',        icon: '🏅', name: 'Rei das Lendas',    desc: 'Acerte 5 personagens' },
+  { id: 'encyclopedia',   icon: '📚', name: 'Enciclopédia',      desc: 'Complete 3 quizzes' },
+];
+
+// =============================================
+// INIT
+// =============================================
+function init() {
+  loadState();
+  if (!state.playerName) {
+    document.getElementById('nameModal').style.display = 'flex';
+  } else {
+    document.getElementById('nameModal').style.display = 'none';
+    updateHomeUI();
+  }
+  renderAchievements();
+}
+
+function saveName() {
+  const input = document.getElementById('nameInput');
+  const name = input.value.trim();
+  if (!name) { showToast('Digite seu nome!', 'info'); input.focus(); return; }
+  state.playerName = name;
+  saveState();
+  document.getElementById('nameModal').style.display = 'none';
+  updateHomeUI();
+  showToast(`Bem-vindo, ${name}! ⚽`, 'success');
+}
+
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveName();
+});
+
+// =============================================
+// PERSISTENCE
+// =============================================
+function saveState() {
+  try { localStorage.setItem('fm_state', JSON.stringify(state)); } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = localStorage.getItem('fm_state');
+    if (s) Object.assign(state, JSON.parse(s));
+  } catch(e) {}
+}
+
+// =============================================
+// NAVIGATION
+// =============================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'screen-ranking') renderRanking();
+  if (id === 'screen-achievements') renderAchievements();
+}
+
+function goHome() {
+  clearQuizTimer();
+  showScreen('screen-home');
+  updateHomeUI();
+}
+
+function confirmQuit(mode) {
+  if (confirm('Sair vai encerrar a sessão atual. Tem certeza?')) {
+    clearQuizTimer();
+    goHome();
+  }
+}
+
+// =============================================
+// HOME UI
+// =============================================
+function updateHomeUI() {
+  document.getElementById('home-player-name').textContent = state.playerName || 'Jogador';
+  document.getElementById('home-level').textContent = state.level;
+  document.getElementById('home-coins').textContent = state.coins;
+  document.getElementById('home-score').textContent = state.totalScore;
+  const xpInLevel = state.xp % XP_PER_LEVEL;
+  document.getElementById('home-xp-label').textContent = `${xpInLevel} / ${XP_PER_LEVEL} XP`;
+  document.getElementById('home-xp-fill').style.width = `${(xpInLevel / XP_PER_LEVEL) * 100}%`;
+}
+
+// =============================================
+// QUIZ MODE
+// =============================================
+function startQuiz() {
+  currentMode = 'quiz';
+  quiz = { questions: shuffle([...QUIZ_QUESTIONS]).slice(0, 10), current: 0, correct: 0, wrong: 0, timer: null, timeLeft: 20, answered: false, sessionCoins: 0, sessionXP: 0, sessionScore: 0, streak: 0 };
+  showScreen('screen-quiz');
+  document.getElementById('q-total').textContent = quiz.questions.length;
+  document.getElementById('quiz-coins').textContent = state.coins;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  quiz.answered = false;
+  const q = quiz.questions[quiz.current];
+  const total = quiz.questions.length;
+
+  document.getElementById('q-current').textContent = quiz.current + 1;
+  document.getElementById('q-progress').style.width = `${((quiz.current + 1) / total) * 100}%`;
+  document.getElementById('q-correct').textContent = quiz.correct;
+  document.getElementById('q-wrong').textContent = quiz.wrong;
+  document.getElementById('q-category').textContent = q.category;
+  document.getElementById('q-text').textContent = q.text;
+
+  // Options
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => answerQuiz(i, btn);
+    grid.appendChild(btn);
+  });
+
+  // Animate card
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'fadeIn .3s ease';
+
+  // Timer
+  startTimer();
+}
+
+function startTimer() {
+  clearQuizTimer();
+  quiz.timeLeft = 20;
+  updateTimer();
+  quiz.timer = setInterval(() => {
+    quiz.timeLeft--;
+    updateTimer();
+    if (quiz.timeLeft <= 0) {
+      clearQuizTimer();
+      if (!quiz.answered) timeUp();
+    }
+  }, 1000);
+}
+
+function clearQuizTimer() {
+  if (quiz.timer) { clearInterval(quiz.timer); quiz.timer = null; }
+}
+
+function updateTimer() {
+  const num = document.getElementById('timerNum');
+  const circle = document.getElementById('timerCircle');
+  num.textContent = quiz.timeLeft;
+  const pct = (quiz.timeLeft / 20) * 100;
+  circle.style.setProperty('--pct', pct + '%');
+  const color = quiz.timeLeft > 10 ? '#2563EB' : quiz.timeLeft > 5 ? '#FBBF24' : '#EF4444';
+  circle.style.background = `conic-gradient(${color} ${pct}%, rgba(255,255,255,0.08) 0%)`;
+}
+
+function timeUp() {
+  quiz.answered = true;
+  quiz.wrong++;
+  quiz.streak = 0;
+  const q = quiz.questions[quiz.current];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b, i) => { b.disabled = true; if (i === q.answer) b.classList.add('correct'); });
+  showFeedback(false);
+  setTimeout(nextQuestion, 1600);
+}
+
+function answerQuiz(idx, btn) {
+  if (quiz.answered) return;
+  quiz.answered = true;
+  clearQuizTimer();
+
+  const q = quiz.questions[quiz.current];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b => b.disabled = true);
+
+  const isCorrect = idx === q.answer;
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    quiz.correct++;
+    quiz.streak = (quiz.streak || 0) + 1;
+    const coins = 10 + Math.floor(quiz.timeLeft / 2);
+    const xp = 10;
+    const pts = 100 + quiz.timeLeft * 5;
+    quiz.sessionCoins += coins;
+    quiz.sessionXP += xp;
+    quiz.sessionScore += pts;
+    spawnCoinFloat(btn, `+${coins}🪙`);
+    state.coins += coins;
+    state.xp += xp;
+    state.totalScore += pts;
+    checkLevelUp();
+    checkAchievements({ type: 'quiz_correct', streak: quiz.streak });
+    document.getElementById('quiz-coins').textContent = state.coins;
+  } else {
+    btn.classList.add('wrong');
+    btns[q.answer].classList.add('correct');
+    quiz.wrong++;
+    quiz.streak = 0;
+  }
+
+  showFeedback(isCorrect);
+  saveState();
+  setTimeout(nextQuestion, 1500);
+}
+
+function nextQuestion() {
+  quiz.current++;
+  if (quiz.current >= quiz.questions.length) {
+    showQuizResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showQuizResults() {
+  const total = quiz.questions.length;
+  const pct = Math.round((quiz.correct / total) * 100);
+
+  document.getElementById('res-correct').textContent = quiz.correct;
+  document.getElementById('res-wrong').textContent = quiz.wrong;
+  document.getElementById('res-pct').textContent = pct + '%';
+  document.getElementById('res-coins').textContent = '+' + quiz.sessionCoins;
+  document.getElementById('res-xp').textContent = '+' + quiz.sessionXP;
+  document.getElementById('res-score').textContent = quiz.sessionScore;
+  document.getElementById('res-level').textContent = 'Nível ' + state.level;
+
+  const emojis = ['😔','😐','🙂','😊','🏆'];
+  const emojiIdx = Math.min(4, Math.floor(pct / 25));
+  document.getElementById('result-trophy').textContent = emojis[emojiIdx];
+
+  const titles = ['Continue tentando!','Bom começo!','Muito bem!','Excelente!','Perfeito! 🌟'];
+  document.getElementById('result-title').textContent = titles[emojiIdx];
+  document.getElementById('result-subtitle').textContent = `${quiz.correct} de ${total} perguntas corretas`;
+
+  checkAchievements({ type: 'quiz_complete', correct: quiz.correct, total });
+
+  // New achievements
+  const newAchs = checkAndReturnNewAchievements();
+  const achContainer = document.getElementById('new-achievements');
+  achContainer.innerHTML = '';
+  if (newAchs.length) {
+    achContainer.innerHTML = `<div style="font-family:var(--font-head);font-size:.85rem;font-weight:700;color:var(--gold);margin-bottom:8px;letter-spacing:.1em;text-transform:uppercase;">🎖️ Conquistas desbloqueadas</div>`;
+    newAchs.forEach(a => {
+      achContainer.innerHTML += `<div class="achievement-item unlocked" style="margin-bottom:8px"><div class="ach-icon">${a.icon}</div><div class="ach-info"><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`;
+    });
+  }
+
+  // Add to ranking
+  addRankingEntry();
+  saveState();
+
+  showScreen('screen-results');
+}
+
+// =============================================
+// GUESS MODE
+// =============================================
+function startGuess() {
+  currentMode = 'guess';
+  guess = { current: null, revealedClues: 0, sessionCorrect: 0, sessionScore: 0, sessionCoins: 0, used: new Set(), currentPts: 300 };
+  showScreen('screen-guess');
+  document.getElementById('guess-coins').textContent = state.coins;
+  loadNextGuess();
+}
+
+function loadNextGuess() {
+  // Pick random unused person
+  const available = GUESS_PEOPLE.filter((_, i) => !guess.used.has(i));
+  if (!available.length) {
+    guess.used.clear();
+  }
+  const availableNow = GUESS_PEOPLE.filter((_, i) => !guess.used.has(i));
+  const idx = GUESS_PEOPLE.indexOf(availableNow[Math.floor(Math.random() * availableNow.length)]);
+  guess.used.add(idx);
+  guess.current = GUESS_PEOPLE[idx];
+  guess.currentIdx = idx;
+  guess.revealedClues = 1;
+  guess.currentPts = 300;
+
+  document.getElementById('guess-category').textContent = guess.current.category;
+  document.getElementById('g-num').textContent = guess.sessionCorrect + 1;
+  document.getElementById('guessInput').value = '';
+  renderClues();
+  updateGuessPts();
+  document.getElementById('revealBtn').disabled = false;
+}
+
+function renderClues() {
+  const list = document.getElementById('clues-list');
+  list.innerHTML = '';
+  const total = guess.current.clues.length;
+
+  for (let i = 0; i < total; i++) {
+    if (i < guess.revealedClues) {
+      list.innerHTML += `
+        <div class="clue-item">
+          <div class="clue-num">${i + 1}</div>
+          <div class="clue-text">${guess.current.clues[i]}</div>
+        </div>`;
+    } else {
+      list.innerHTML += `<div class="clue-locked">🔒 Dica ${i + 1}</div>`;
+    }
+  }
+}
+
+function updateGuessPts() {
+  document.getElementById('pts-now').textContent = guess.currentPts;
+}
+
+function revealNextClue() {
+  if (guess.revealedClues >= guess.current.clues.length) {
+    showToast('Todas as dicas já foram reveladas!', 'info');
+    return;
+  }
+  guess.revealedClues++;
+  guess.currentPts = Math.max(50, guess.currentPts - 50);
+  renderClues();
+  updateGuessPts();
+  if (guess.revealedClues >= guess.current.clues.length) {
+    document.getElementById('revealBtn').disabled = true;
+  }
+}
+
+function submitGuess() {
+  const input = document.getElementById('guessInput');
+  const answer = input.value.trim();
+  if (!answer) { input.focus(); return; }
+
+  const correct = guess.current.name;
+  const isCorrect = normalize(answer) === normalize(correct);
+
+  if (isCorrect) {
+    // Correct!
+    guess.sessionCorrect++;
+    guess.sessionScore += guess.currentPts;
+    guess.sessionCoins += Math.ceil(guess.currentPts / 10);
+    state.coins += Math.ceil(guess.currentPts / 10);
+    state.xp += 15;
+    state.totalScore += guess.currentPts;
+    checkLevelUp();
+    checkAchievements({ type: 'guess_correct', clues: guess.revealedClues, total: guess.sessionCorrect });
+    document.getElementById('g-correct').textContent = guess.sessionCorrect;
+    document.getElementById('g-score').textContent = guess.sessionScore;
+    document.getElementById('guess-coins').textContent = state.coins;
+
+    spawnCoinFloat(document.getElementById('guessInput'), `+${guess.currentPts}⭐`);
+    showToast(`🎉 Correto! +${guess.currentPts} pontos`, 'success');
+
+    // Animate card
+    document.querySelector('.clues-card').classList.add('guess-correct-anim');
+    setTimeout(() => { document.querySelector('.clues-card').classList.remove('guess-correct-anim'); }, 500);
+
+    saveState();
+    setTimeout(loadNextGuess, 1200);
+  } else {
+    // Wrong
+    input.classList.add('wrong'); // flash red
+    showToast('Tente novamente! 🔍', 'info');
+    setTimeout(() => input.classList.remove('wrong'), 600);
+    input.value = '';
+    input.focus();
+  }
+}
+
+function giveUp() {
+  const modal = document.getElementById('answerModal');
+  document.getElementById('modalTitle').textContent = 'Era...';
+  document.getElementById('modalBody').textContent = `Não conseguiu desta vez! O personagem era:`;
+  document.getElementById('modalAnswer').textContent = guess.current.name;
+  document.getElementById('modalEmoji').textContent = '🔍';
+  modal.classList.add('open');
+}
+
+function nextGuess() {
+  document.getElementById('answerModal').classList.remove('open');
+  loadNextGuess();
+}
+
+function normalize(str) {
+  return str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// =============================================
+// FEEDBACK ANIMATION
+// =============================================
+function showFeedback(correct) {
+  const overlay = document.getElementById('feedbackOverlay');
+  const bubble = document.getElementById('feedbackBubble');
+  bubble.textContent = correct ? '✓ CORRETO!' : '✗ ERRADO!';
+  bubble.className = 'feedback-bubble ' + (correct ? 'correct' : 'wrong');
+  overlay.classList.add('show');
+  setTimeout(() => overlay.classList.remove('show'), 900);
+}
+
+// =============================================
+// COIN FLOAT
+// =============================================
+function spawnCoinFloat(el, text) {
+  const rect = el.getBoundingClientRect();
+  const div = document.createElement('div');
+  div.className = 'coin-float';
+  div.textContent = text;
+  div.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+  div.style.top = (rect.top + window.scrollY - 10) + 'px';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 950);
+}
+
+// =============================================
+// LEVEL UP
+// =============================================
+function checkLevelUp() {
+  const newLevel = 1 + Math.floor(state.xp / XP_PER_LEVEL);
+  if (newLevel > state.level) {
+    state.level = newLevel;
+    showToast(`🎉 LEVEL UP! Agora você é Nível ${newLevel}!`, 'gold');
+    checkAchievements({ type: 'level', level: newLevel });
+  }
+}
+
+// =============================================
+// ACHIEVEMENTS
+// =============================================
+let _newAchsThisRound = [];
+
+function checkAchievements(event) {
+  const unlock = (id) => {
+    if (!state.achievements[id]) {
+      state.achievements[id] = true;
+      const def = ACHIEVEMENTS_DEF.find(a => a.id === id);
+      if (def) {
+        _newAchsThisRound.push(def);
+        showToast(`🎖️ Conquista: ${def.name}`, 'gold');
+      }
+    }
+  };
+
+  if (event.type === 'quiz_correct') {
+    unlock('first_correct');
+    if (event.streak >= 5) unlock('streak_5');
+  }
+  if (event.type === 'quiz_complete') {
+    unlock('quiz_complete');
+    state.quizHistory = state.quizHistory || [];
+    state.quizHistory.push(1);
+    if (state.quizHistory.length >= 3) unlock('encyclopedia');
+    if (event.correct === event.total) unlock('perfect_quiz');
+  }
+  if (event.type === 'guess_correct') {
+    unlock('first_guess');
+    if (event.clues === 1) unlock('guess_first_clue');
+    if (event.total >= 5) unlock('guess_5');
+  }
+  if (event.type === 'level') {
+    if (event.level >= 5) unlock('level_5');
+  }
+  if (state.totalScore >= 500) unlock('score_500');
+  if (state.totalScore >= 2000) unlock('score_2000');
+  if (state.coins >= 100) unlock('coins_100');
+}
+
+function checkAndReturnNewAchievements() {
+  const list = [..._newAchsThisRound];
+  _newAchsThisRound = [];
+  return list;
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achievements-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS_DEF.forEach(a => {
+    const unlocked = !!state.achievements[a.id];
+    grid.innerHTML += `
+      <div class="achievement-item ${unlocked ? 'unlocked' : 'locked'}">
+        <div class="ach-icon">${a.icon}</div>
+        <div class="ach-info">
+          <div class="ach-name">${a.name}</div>
+          <div class="ach-desc">${a.desc}</div>
+        </div>
+      </div>`;
+  });
+}
+
+// =============================================
+// RANKING
+// =============================================
+function addRankingEntry() {
+  const entry = {
+    name: state.playerName || 'Anônimo',
+    score: state.totalScore,
+    level: state.level,
+    correct: (state.rankingData[0]?.correct || 0) + quiz.correct,
+    date: Date.now()
+  };
+  // Update or insert own entry
+  const existing = state.rankingData.findIndex(r => r.name === entry.name);
+  if (existing >= 0) {
+    state.rankingData[existing] = entry;
+  } else {
+    state.rankingData.push(entry);
+  }
+  state.rankingData.sort((a, b) => b.score - a.score);
+  state.rankingData = state.rankingData.slice(0, 10);
+}
+
+function renderRanking() {
+  const list = document.getElementById('ranking-list');
+  if (!state.rankingData || !state.rankingData.length) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🏅</div><p>Nenhuma pontuação ainda.<br>Complete um quiz para entrar!</p></div>`;
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  list.innerHTML = state.rankingData.map((r, i) => `
+    <div class="rank-item">
+      <div class="rank-pos ${i < 3 ? 'p'+(i+1) : ''}">${medals[i] || (i+1)}</div>
+      <div class="rank-avatar">${r.name[0].toUpperCase()}</div>
+      <div class="rank-info">
+        <div class="rank-name">${r.name}</div>
+        <div class="rank-level">Nível ${r.level}</div>
+      </div>
+      <div class="rank-score">${r.score.toLocaleString()}</div>
+    </div>`).join('');
+}
+
+// =============================================
+// RESULTS RESTART
+// =============================================
+function restartMode() {
+  if (currentMode === 'quiz') startQuiz();
+  else if (currentMode === 'guess') startGuess();
+  else goHome();
+}
+
+// =============================================
+// TOAST
+// =============================================
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+// =============================================
+// UTILS
+// =============================================
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// =============================================
+// BOOT
+// =============================================
+init();
+</script>
+</body>
+</html>

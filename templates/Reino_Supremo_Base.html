@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Reino Supremo</title>
+<style>
+body{background:#111;color:#fff;font-family:Arial;margin:20px}
+.panel{background:#222;padding:15px;border-radius:10px;margin-bottom:10px}
+button{padding:10px;margin:5px}
+</style>
+</head>
+<body>
+<h1>👑 Reino Supremo (Base Expandida)</h1>
+
+<div class="panel">
+<h3>Status</h3>
+Vida: <span id="vida">100</span><br>
+Mana: <span id="mana">50</span><br>
+Ouro: <span id="ouro">50</span><br>
+Povo: <span id="povo">50</span><br>
+Exército: <span id="exercito">50</span><br>
+Fé: <span id="fe">50</span><br>
+Tecnologia: <span id="tec">50</span><br>
+Reputação: <span id="rep">50</span><br>
+</div>
+
+<div class="panel">
+<button onclick="usarPocao()">🧪 Tomar Poção</button>
+<button onclick="abrirMagia()">✨ Usar Magia</button>
+<button onclick="iniciarGuerra()">⚔ Iniciar Guerra</button>
+</div>
+
+<div class="panel">
+<h3>Inventário</h3>
+<ul id="inv"></ul>
+</div>
+
+<script>
+let vida=100,mana=50,ouro=50,povo=50,exercito=50,fe=50,tec=50,rep=50;
+let inventario=["Poção de Cura","Espada de Ferro","Amuleto Élfico"];
+let guerraAtiva=false;
+
+function render(){
+vidaEl.textContent=vida;
+manaEl.textContent=mana;
+ouroEl.textContent=ouro;
+povoEl.textContent=povo;
+exercitoEl.textContent=exercito;
+feEl.textContent=fe;
+tecEl.textContent=tec;
+repEl.textContent=rep;
+
+inv.innerHTML="";
+inventario.forEach(i=>{
+let li=document.createElement("li");
+li.textContent=i;
+inv.appendChild(li);
+});
+}
+
+function usarPocao(){
+let r=Math.random();
+
+if(r<0.4){
+vida=Math.min(100,vida+25);
+alert("Poção de Cura!");
+}else if(r<0.8){
+mana=Math.min(100,mana+20);
+alert("Poção de Mana!");
+}else{
+vida-=30;
+alert("Era veneno!");
+}
+render();
+}
+
+function abrirMagia(){
+if(mana<20){
+alert("Mana insuficiente");
+return;
+}
+mana-=20;
+vida=Math.min(100,vida+15);
+alert("Cura Divina lançada");
+render();
+}
+
+function iniciarGuerra(){
+guerraAtiva=true;
+
+let inimigo=40+Math.floor(Math.random()*60);
+
+if(exercito>=inimigo){
+alert("Vitória na guerra!");
+ouro+=20;
+rep+=15;
+}else{
+alert("Derrota na guerra!");
+povo-=20;
+rep-=20;
+}
+render();
+}
+
+const vidaEl=document.getElementById("vida");
+const manaEl=document.getElementById("mana");
+const ouroEl=document.getElementById("ouro");
+const povoEl=document.getElementById("povo");
+const exercitoEl=document.getElementById("exercito");
+const feEl=document.getElementById("fe");
+const tecEl=document.getElementById("tec");
+const repEl=document.getElementById("rep");
+const inv=document.getElementById("inv");
+
+render();
+</script>
+</body>
+</html>

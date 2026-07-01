@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Trono de Fogo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#C9960A;--gold2:#E8B84B;--gold3:#7A5800;
+  --blood:#6B0000;--blood2:#A01010;--blood3:#3A0000;
+  --parch:#F0E6CC;--parch2:#D8C89A;--parch3:#BFA870;
+  --ink:#18100A;--ink2:#3A2510;--ink3:#5C3E20;
+  --stone:#1A1410;--stone2:#0E0B08;--stone3:#251C14;
+  --dragon:#8B1A1A;--targ:#6B0E0E;
+  --bg:#0A0806;
+  --bar-gold:#C9960A;--bar-pop:#4A7C4A;--bar-army:#8B1A1A;--bar-faith:#3A3A7C;--bar-drag:#5C2A6B;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+body{font-family:'Crimson Text',Georgia,serif;background:var(--bg)}
+
+#game{
+  width:420px;max-width:100vw;height:100vh;
+  margin:0 auto;position:relative;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 0%,#1A0E06 0%,#0A0806 60%);
+}
+
+/* DRAGON WINGS BG */
+#dragon-bg{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  opacity:0.04;
+}
+#dragon-bg svg{width:100%;height:100%}
+
+/* FIRE PARTICLES */
+#fire-container{position:absolute;bottom:0;left:0;right:0;height:120px;pointer-events:none;z-index:1;overflow:hidden}
+.fire-particle{
+  position:absolute;bottom:0;width:3px;border-radius:50%;
+  animation:rise linear infinite;opacity:0;
+}
+@keyframes rise{
+  0%{transform:translateY(0) scale(1);opacity:0.6}
+  100%{transform:translateY(-100px) scale(0);opacity:0}
+}
+
+/* INTRO */
+#intro{
+  position:absolute;inset:0;background:var(--bg);z-index:300;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 30px;
+}
+.intro-fire{font-size:64px;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(255,100,0,0.6));animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.intro-title{
+  font-family:'Cinzel',serif;font-size:30px;font-weight:900;
+  color:var(--gold2);letter-spacing:6px;text-align:center;
+  text-shadow:0 0 30px rgba(201,150,10,0.5);
+}
+.intro-subtitle{
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;
+  color:var(--blood2);margin:4px 0 6px;text-transform:uppercase;
+}
+.intro-rule{
+  width:200px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold2),var(--gold3),transparent);
+  margin:12px auto 20px;
+}
+.intro-tagline{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(240,230,204,0.45);font-size:15px;text-align:center;
+  line-height:1.7;margin-bottom:36px;max-width:280px;
+}
+.house-badge{
+  display:flex;gap:24px;margin-bottom:32px;
+}
+.house{text-align:center}
+.house-sigil{font-size:28px;display:block;margin-bottom:4px}
+.house-name{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:rgba(240,230,204,0.3)}
+#btn-start{
+  background:linear-gradient(135deg,#C9960A 0%,#7A5800 100%);
+  border:1px solid rgba(201,150,10,0.4);border-radius:4px;
+  padding:15px 52px;font-family:'Cinzel',serif;font-size:13px;
+  font-weight:700;letter-spacing:4px;color:var(--ink);cursor:pointer;
+  box-shadow:0 0 30px rgba(201,150,10,0.25);transition:transform 0.15s;
+}
+#btn-start:active{transform:scale(0.96)}
+.intro-lore{
+  position:absolute;bottom:20px;left:0;right:0;text-align:center;
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;
+  color:rgba(240,230,204,0.15);
+}
+
+/* HUD */
+#hud{
+  position:absolute;top:0;left:0;right:0;z-index:20;
+  background:linear-gradient(180deg,rgba(10,8,6,0.98) 70%,transparent);
+  padding:10px 14px 16px;
+}
+#season-bar{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;
+}
+#season-label{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2.5px;
+  color:var(--gold3);text-transform:uppercase;
+}
+#year-display{
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;
+  color:var(--gold2);font-weight:600;
+}
+#dynasty-label{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;
+  color:rgba(240,230,204,0.3);
+}
+
+#stats{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.stat{display:flex;flex-direction:column;align-items:center;gap:3px}
+.stat-icon{font-size:14px;line-height:1}
+.stat-bar-bg{
+  width:100%;height:3px;
+  background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;
+}
+.stat-bar-fill{height:100%;border-radius:2px;transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1)}
+.stat-value{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:600;letter-spacing:0.5px;
+}
+.stat-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:1px;opacity:0.5;color:var(--parch)}
+
+/* PORTRAIT */
+#portrait-area{
+  position:absolute;top:108px;left:0;right:0;
+  display:flex;justify-content:center;z-index:15;pointer-events:none;
+}
+#portrait-frame{
+  width:76px;height:76px;border-radius:50%;
+  border:2px solid rgba(201,150,10,0.35);
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(10,8,6,0.85);font-size:32px;position:relative;
+  box-shadow:0 0 20px rgba(0,0,0,0.8);
+}
+#portrait-frame::before{
+  content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:1px solid rgba(201,150,10,0.1);
+}
+#portrait-frame::after{
+  content:'';position:absolute;inset:-10px;border-radius:50%;
+  border:1px solid rgba(201,150,10,0.05);
+}
+#char-name-label{
+  position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-family:'Cinzel',serif;font-size:9px;
+  letter-spacing:2px;color:var(--gold2);opacity:0.65;
+}
+.faction-tag{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-family:'Cinzel',serif;font-size:7px;
+  letter-spacing:2px;padding:2px 7px;border-radius:2px;
+}
+
+/* HINTS */
+#hints{
+  position:absolute;top:200px;left:0;right:0;
+  display:flex;justify-content:space-between;padding:0 18px;
+  z-index:5;pointer-events:none;
+}
+.hint{
+  font-family:'Cinzel',serif;font-size:8px;letter-spacing:2px;
+  opacity:0;transition:opacity 0.25s,color 0.25s;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.hint-arrow{font-size:18px}
+.hint.left{color:#4A7C4A}
+.hint.right{color:#8B1A1A}
+
+/* CARD */
+#card-container{
+  position:absolute;top:226px;left:50%;width:330px;
+  transform:translateX(-50%);z-index:25;cursor:grab;
+  will-change:transform;
+}
+#card-container.dragging{cursor:grabbing}
+#card{
+  width:330px;
+  background:linear-gradient(175deg,var(--parch) 0%,var(--parch2) 100%);
+  border-radius:6px;border:1px solid rgba(201,150,10,0.3);
+  overflow:hidden;position:relative;
+  box-shadow:0 24px 70px rgba(0,0,0,0.85),0 0 0 1px rgba(201,150,10,0.08);
+}
+.card-age-worn{
+  position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity:0.4;mix-blend-mode:multiply;
+}
+#card-stripe{height:5px;width:100%;transition:background 0.4s}
+#card-wax-seal{
+  position:absolute;top:8px;right:12px;
+  font-size:20px;opacity:0.6;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+#card-inner{padding:14px 18px 18px}
+#card-faction{
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:6px;opacity:0.7;
+}
+#card-title{
+  font-family:'Cinzel',serif;font-size:15px;font-weight:700;
+  color:var(--ink);margin-bottom:8px;line-height:1.3;
+  padding-right:24px;
+}
+.card-divider{
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(122,88,0,0.4),transparent);
+  margin-bottom:10px;
+}
+#card-text{
+  font-family:'Crimson Text',serif;font-size:14.5px;
+  line-height:1.55;color:var(--ink2);
+  font-style:italic;min-height:66px;
+}
+#card-speaker{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
+  color:var(--ink3);margin-top:6px;opacity:0.7;
+}
+#card-choices{
+  margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:7px;
+}
+.choice-preview{
+  padding:7px 8px;border-radius:4px;
+  background:rgba(0,0,0,0.06);border:1px solid rgba(0,0,0,0.07);
+}
+.choice-dir{
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;
+  color:var(--ink3);margin-bottom:4px;opacity:0.65;text-transform:uppercase;
+}
+.choice-text{
+  font-family:'Crimson Text',serif;font-size:11px;
+  color:var(--ink2);margin-bottom:5px;line-height:1.3;
+}
+.choice-effects{display:flex;flex-wrap:wrap;gap:3px}
+.eff{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
+  letter-spacing:0.3px;padding:1px 4px;border-radius:2px;
+}
+.eff.pos{color:#2E6B2E;background:rgba(46,107,46,0.12)}
+.eff.neg{color:#8B1A1A;background:rgba(139,26,26,0.12)}
+
+/* SWIPE GUIDES */
+#swipe-L,#swipe-R{
+  position:absolute;top:0;bottom:0;width:50%;
+  pointer-events:none;opacity:0;z-index:18;transition:opacity 0.2s;
+}
+#swipe-L{left:0;background:linear-gradient(90deg,rgba(74,124,74,0.14) 0%,transparent 100%)}
+#swipe-R{right:0;background:linear-gradient(270deg,rgba(139,26,26,0.14) 0%,transparent 100%)}
+
+/* BUTTONS */
+#buttons{
+  position:absolute;bottom:22px;left:0;right:0;
+  display:flex;justify-content:center;gap:44px;z-index:20;
+}
+.action-btn{
+  width:58px;height:58px;border-radius:50%;border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:20px;transition:transform 0.15s;position:relative;
+}
+.action-btn:active{transform:scale(0.9)}
+#btn-yes{
+  background:linear-gradient(135deg,#2E5C2E 0%,#1A3A1A 100%);
+  box-shadow:0 4px 20px rgba(46,92,46,0.4);
+}
+#btn-no{
+  background:linear-gradient(135deg,#8B1A1A 0%,#5C0000 100%);
+  box-shadow:0 4px 20px rgba(139,26,26,0.4);
+}
+.btn-ring{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.12);
+}
+.btn-lbl{
+  position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:2px;
+  white-space:nowrap;opacity:0.5;
+}
+#btn-yes .btn-lbl{color:#7CB87C}
+#btn-no .btn-lbl{color:#C87C7C}
+
+/* FLASH */
+#flash{
+  position:absolute;inset:0;pointer-events:none;
+  opacity:0;z-index:60;transition:opacity 0.1s;
+}
+
+/* EVENT OVERLAY */
+#event-overlay{
+  position:absolute;inset:0;z-index:150;
+  background:rgba(10,8,6,0.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px;
+}
+#event-overlay.show{display:flex}
+.event-icon{font-size:56px;margin-bottom:12px;animation:evt-pulse 1.5s ease-in-out infinite}
+@keyframes evt-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.event-title{
+  font-family:'Cinzel',serif;font-size:20px;font-weight:700;
+  color:var(--gold2);letter-spacing:3px;text-align:center;margin-bottom:6px;
+}
+.event-text{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(240,230,204,0.7);font-size:15px;text-align:center;
+  line-height:1.6;margin-bottom:24px;max-width:300px;
+}
+.event-rule{
+  width:100px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold3),transparent);
+  margin:0 auto 20px;
+}
+#btn-event-continue{
+  background:linear-gradient(135deg,#C9960A,#7A5800);
+  border:none;border-radius:3px;padding:12px 36px;
+  font-family:'Cinzel',serif;font-size:12px;letter-spacing:3px;
+  color:var(--ink);cursor:pointer;font-weight:700;
+  transition:transform 0.15s;
+}
+#btn-event-continue:active{transform:scale(0.95)}
+
+/* GAME OVER */
+#game-over{
+  position:absolute;inset:0;background:rgba(10,8,6,0.98);
+  z-index:200;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:36px 28px;overflow-y:auto;
+}
+#game-over.show{display:flex}
+#go-icon{font-size:52px;margin-bottom:10px;animation:breathe 2s ease-in-out infinite}
+#go-title{
+  font-family:'Cinzel',serif;font-size:22px;font-weight:900;
+  color:var(--gold2);letter-spacing:4px;text-align:center;margin-bottom:4px;
+}
+#go-cause{
+  font-family:'Crimson Text',serif;font-style:italic;
+  color:rgba(240,230,204,0.45);font-size:14px;
+  text-align:center;margin-bottom:6px;max-width:280px;
+}
+#go-reign{
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;
+  color:rgba(240,230,204,0.4);margin-bottom:20px;
+}
+#go-stats{
+  width:100%;display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:16px;
+}
+.go-stat{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(201,150,10,0.12);
+  border-radius:4px;padding:10px;text-align:center;
+}
+.go-stat-icon{font-size:18px;display:block;margin-bottom:3px}
+.go-stat-val{
+  font-family:'Cinzel',serif;font-size:18px;font-weight:700;
+  color:var(--gold2);display:block;
+}
+.go-stat-name{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:1px}
+#go-achievements{
+  width:100%;margin-bottom:16px;
+  display:flex;flex-wrap:wrap;gap:6px;justify-content:center;
+}
+.ach-badge{
+  font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(201,150,10,0.12);border:1px solid rgba(201,150,10,0.25);
+  color:var(--gold2);
+}
+#go-events-seen{
+  font-family:'Crimson Text',serif;font-size:12px;
+  color:rgba(240,230,204,0.3);text-align:center;margin-bottom:20px;
+}
+#btn-restart{
+  background:linear-gradient(135deg,#C9960A 0%,#7A5800 100%);
+  border:none;border-radius:3px;padding:14px 44px;
+  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
+  letter-spacing:3px;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 20px rgba(201,150,10,0.25);transition:transform 0.15s;
+}
+#btn-restart:active{transform:scale(0.95)}
+
+/* TOOLTIP / MEMORY LOG */
+#log-btn{
+  position:absolute;top:10px;right:10px;z-index:30;
+  background:rgba(201,150,10,0.1);border:1px solid rgba(201,150,10,0.2);
+  border-radius:50%;width:28px;height:28px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--gold2);transition:background 0.2s;
+}
+#log-btn:hover{background:rgba(201,150,10,0.2)}
+#log-panel{
+  position:absolute;top:44px;right:8px;z-index:31;
+  width:240px;
+  background:rgba(15,11,7,0.97);border:1px solid rgba(201,150,10,0.2);
+  border-radius:4px;padding:12px;display:none;
+  max-height:300px;overflow-y:auto;
+}
+#log-panel.show{display:block}
+#log-panel h3{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:var(--gold2);margin-bottom:8px;
+}
+.log-entry{
+  font-family:'Crimson Text',serif;font-size:12px;
+  color:rgba(240,230,204,0.5);border-bottom:1px solid rgba(201,150,10,0.08);
+  padding:4px 0;line-height:1.4;
+}
+.log-year{font-weight:600;color:rgba(201,150,10,0.6);font-size:10px}
+</style>
+</head>
+<body>
+<div id="game">
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-fire">🐉</div>
+  <div class="intro-title">TRONO DE FOGO</div>
+  <div class="intro-subtitle">A Dança dos Dragões</div>
+  <div class="intro-rule"></div>
+  <div class="intro-tagline">O Trono de Ferro não perdoa os fracos.<br>Governe Casa Targaryen com sabedoria — ou pereça nas chamas.</div>
+  <div class="house-badge">
+    <div class="house"><span class="house-sigil">🐉</span><span class="house-name">Targaryen</span></div>
+    <div class="house"><span class="house-sigil">🐺</span><span class="house-name">Stark</span></div>
+    <div class="house"><span class="house-sigil">🦁</span><span class="house-name">Lannister</span></div>
+    <div class="house"><span class="house-sigil">🌹</span><span class="house-name">Tyrell</span></div>
+    <div class="house"><span class="house-sigil">🦑</span><span class="house-name">Greyjoy</span></div>
+  </div>
+  <button id="btn-start" onclick="startGame()">SENTAR NO TRONO</button>
+  <div class="intro-lore">ARRASTE AS CARTAS PARA DECIDIR · FEW SURVIVE LONG</div>
+</div>
+
+<!-- BG -->
+<div id="dragon-bg">
+<svg viewBox="0 0 420 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M210 380 L80 150 L30 280 L90 200 L60 350 L40 300 L10 420 L70 380 L50 480 L30 440 L20 550 L80 500 L60 600 L210 700 L360 600 L340 500 L400 550 L390 440 L410 480 L390 380 L420 420 L390 300 L360 350 L330 200 L390 280 L340 150 Z" fill="white" opacity="0.5"/>
+  <ellipse cx="210" cy="380" rx="25" ry="15" fill="white" opacity="0.3"/>
+  <path d="M170 360 Q210 340 250 360 Q230 400 210 410 Q190 400 170 360Z" fill="white" opacity="0.4"/>
+</svg>
+</div>
+<div id="fire-container"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="season-bar">
+    <div id="season-label">Reinado</div>
+    <div id="year-display">Ano <span id="year-val">1</span></div>
+    <div id="dynasty-label">Casa Targaryen</div>
+  </div>
+  <div id="stats">
+    <div class="stat">
+      <div class="stat-icon">💰</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-gold" style="background:var(--bar-gold);width:50%"></div></div>
+      <div class="stat-value" id="val-gold" style="color:var(--bar-gold)">50</div>
+      <div class="stat-label">OURO</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">👥</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-pop" style="background:var(--bar-pop);width:50%"></div></div>
+      <div class="stat-value" id="val-pop" style="color:var(--bar-pop)">50</div>
+      <div class="stat-label">POVO</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">⚔️</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-army" style="background:var(--bar-army);width:50%"></div></div>
+      <div class="stat-value" id="val-army" style="color:var(--bar-army)">50</div>
+      <div class="stat-label">EXÉRCITO</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">🐉</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-drag" style="background:var(--bar-drag);width:50%"></div></div>
+      <div class="stat-value" id="val-drag" style="color:var(--bar-drag)">50</div>
+      <div class="stat-label">DRAGÕES</div>
+    </div>
+    <div class="stat">
+      <div class="stat-icon">⚖️</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-noble" style="background:#6B4C2A;width:50%"></div></div>
+      <div class="stat-value" id="val-noble" style="color:#A07040">50</div>
+      <div class="stat-label">NOBRES</div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG -->
+<div id="log-btn" onclick="toggleLog()">📜</div>
+<div id="log-panel">
+  <h3>📜 CRÔNICAS DO REINADO</h3>
+  <div id="log-entries"></div>
+</div>
+
+<!-- PORTRAIT -->
+<div id="portrait-area">
+  <div id="portrait-frame">
+    <span id="char-emoji">⚔️</span>
+    <span id="char-name-label">CONSELHEIRO</span>
+  </div>
+</div>
+
+<!-- HINTS -->
+<div id="hints">
+  <div class="hint left" id="hint-L"><span class="hint-arrow">←</span><span>ACEITAR</span></div>
+  <div class="hint right" id="hint-R"><span>RECUSAR</span><span class="hint-arrow">→</span></div>
+</div>
+
+<!-- CARD -->
+<div id="card-container">
+  <div id="card">
+    <div class="card-age-worn"></div>
+    <div id="card-stripe"></div>
+    <div id="card-wax-seal">🐉</div>
+    <div id="card-inner">
+      <div id="card-faction">Casa Targaryen</div>
+      <div id="card-title">O Trono Aguarda</div>
+      <div class="card-divider"></div>
+      <div id="card-text">Carregando...</div>
+      <div id="card-speaker">— Personagem</div>
+      <div id="card-choices">
+        <div class="choice-preview">
+          <div class="choice-dir">← Aceitar</div>
+          <div class="choice-text" id="choice-yes-text"></div>
+          <div class="choice-effects" id="eff-yes"></div>
+        </div>
+        <div class="choice-preview">
+          <div class="choice-dir">Recusar →</div>
+          <div class="choice-text" id="choice-no-text"></div>
+          <div class="choice-effects" id="eff-no"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SWIPE -->
+<div id="swipe-L"></div>
+<div id="swipe-R"></div>
+
+<!-- BUTTONS -->
+<div id="buttons">
+  <button class="action-btn" id="btn-yes" onclick="choose('yes')">✓<div class="btn-ring"></div><span class="btn-lbl">ACEITAR</span></button>
+  <button class="action-btn" id="btn-no" onclick="choose('no')">✕<div class="btn-ring"></div><span class="btn-lbl">RECUSAR</span></button>
+</div>
+
+<!-- FLASH -->
+<div id="flash"></div>
+
+<!-- EVENT OVERLAY -->
+<div id="event-overlay">
+  <div class="event-icon" id="ev-icon">🔥</div>
+  <div class="event-title" id="ev-title">EVENTO</div>
+  <div class="event-rule"></div>
+  <div class="event-text" id="ev-text">...</div>
+  <button id="btn-event-continue" onclick="closeEvent()">CONTINUAR</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="game-over">
+  <div id="go-icon">☠️</div>
+  <div id="go-title">O REINADO ACABOU</div>
+  <div id="go-cause">O trono reclama o imprudente</div>
+  <div id="go-reign">Reinado durou <span id="go-years">1</span> ano(s)</div>
+  <div id="go-stats">
+    <div class="go-stat"><span class="go-stat-icon">💰</span><span class="go-stat-val" id="go-gold">50</span><span class="go-stat-name">OURO</span></div>
+    <div class="go-stat"><span class="go-stat-icon">👥</span><span class="go-stat-val" id="go-pop">50</span><span class="go-stat-name">POVO</span></div>
+    <div class="go-stat"><span class="go-stat-icon">⚔️</span><span class="go-stat-val" id="go-army">50</span><span class="go-stat-name">EXÉRCITO</span></div>
+    <div class="go-stat"><span class="go-stat-icon">🐉</span><span class="go-stat-val" id="go-drag">50</span><span class="go-stat-name">DRAGÕES</span></div>
+  </div>
+  <div id="go-achievements"></div>
+  <div id="go-events-seen"></div>
+  <button id="btn-restart" onclick="restartGame()">NOVO REINADO</button>
+</div>
+
+<script>
+// ===================== FIRE PARTICLES =====================
+function spawnFire(){
+  const c=document.getElementById('fire-container');
+  const p=document.createElement('div');
+  p.className='fire-particle';
+  p.style.left=Math.random()*100+'%';
+  p.style.height=(Math.random()*8+3)+'px';
+  const hue=Math.random()<0.5?15:30;
+  p.style.background=`hsl(${hue},100%,${50+Math.random()*30}%)`;
+  const dur=Math.random()*2+1;
+  p.style.animationDuration=dur+'s';
+  p.style.animationDelay=Math.random()*dur+'s';
+  c.appendChild(p);
+  setTimeout(()=>p.remove(),(dur+1)*1000);
+}
+setInterval(spawnFire,200);
+
+// ===================== GAME DATA =====================
+const FACTIONS={
+  targ:{name:'Casa Targaryen',color:'#6B0E0E',seal:'🐉'},
+  lann:{name:'Casa Lannister',color:'#7A5800',seal:'🦁'},
+  stark:{name:'Casa Stark',color:'#2A3A4A',seal:'🐺'},
+  greyjoy:{name:'Casa Greyjoy',color:'#1A2A3A',seal:'🦑'},
+  tyrell:{name:'Casa Tyrell',color:'#2A4A1A',seal:'🌹'},
+  faith:{name:'A Fé dos Sete',color:'#2A2A5A',seal:'⭐'},
+  small:{name:'Conselho Restrito',color:'#3A2A1A',seal:'📜'},
+  neutral:{name:'Povo de Westeros',color:'#3A3A2A',seal:'⚖️'},
+  citadel:{name:'Cidadela',color:'#1A3A3A',seal:'📚'},
+  essos:{name:'Essos',color:'#4A1A4A',seal:'🌙'},
+};
+
+// 5 resources: gold, pop, army, drag, noble
+const CARDS=[
+  // TARGARYEN
+  {id:'viserys_feast',personagem:'Rei Viserys I',emoji:'👑',faction:'targ',
+  cor:FACTIONS.targ.color,seal:'🐉',
+  titulo:'O Grande Banquete',
+  texto:'"Majestade, o povo anseia por um grande banquete para celebrar nossa casa. Alegria é lealdade."',
+  speaker:'Conselheiro Lyonel Strong',
+  simText:'Organizar o banquete',simEff:{gold:-15,pop:+20,army:0,drag:+5,noble:+10},
+  naoText:'Conservar os recursos',naoEff:{gold:+5,pop:-15,army:0,drag:0,noble:-10},
+  logSim:'Banquete real organizado — o povo comemorou nas ruas.',
+  logNao:'O banquete foi negado — murmúrios de descontentamento.'},
+
+  {id:'daemon_request',personagem:'Príncipe Daemon',emoji:'🗡️',faction:'targ',
+  cor:'#3A0000',seal:'🐉',
+  titulo:'O Príncipe das Cidades Livres',
+  texto:'"Meu rei, dê-me uma frota e saquearei as Cidades Livres em seu nome. Glória e ouro."',
+  speaker:'Príncipe Daemon Targaryen',
+  simText:'Financiar a campanha',simEff:{gold:-20,pop:+5,army:+15,drag:+10,noble:-10},
+  naoText:'Recusar Daemon',naoEff:{gold:+5,pop:0,army:-10,drag:-15,noble:+5},
+  logSim:'Daemon partiu com uma frota — e a esperança de conquista.',
+  logNao:'Daemon foi recusado — e sua raiva ficou registrada em seus olhos.'},
+
+  {id:'rhaenyra_succession',personagem:'Princesa Rhaenyra',emoji:'👸',faction:'targ',
+  cor:'#5C0000',seal:'🐉',
+  titulo:'A Sucessora Legítima',
+  texto:'"Pai, proclame minha sucessão novamente publicamente. Os lordes precisam ouvir de você."',
+  speaker:'Princesa Rhaenyra Targaryen',
+  simText:'Reafirmar a sucessão',simEff:{gold:0,pop:+10,army:-5,drag:+10,noble:-15},
+  naoText:'Manter ambiguidade',naoEff:{gold:+5,pop:-10,army:+5,drag:-5,noble:+10},
+  logSim:'Rhaenyra foi publicamente reafirmada como herdeira.',
+  logNao:'A questão da sucessão permanece sem resposta — e perigosa.'},
+
+  {id:'alicent_faith',personagem:'Rainha Alicent',emoji:'🙏',faction:'faith',
+  cor:FACTIONS.faith.color,seal:'⭐',
+  titulo:'A Devoção da Rainha',
+  texto:'"Meu Rei, os Sete exigem uma nova catedral em Desembarque do Rei. Demonstre sua fé."',
+  speaker:'Rainha Alicent Hightower',
+  simText:'Construir a catedral',simEff:{gold:-20,pop:+10,army:0,drag:-5,noble:+15},
+  naoText:'Recusar a construção',naoEff:{gold:+10,pop:-10,army:0,drag:+5,noble:-10},
+  logSim:'A catedral de Alicent foi erguida — a Fé ficou satisfeita.',
+  logNao:'Alicent escondeu sua raiva, mas não esqueceu.'},
+
+  {id:'otto_councilor',personagem:'Mão Otto Hightower',emoji:'📜',faction:'small',
+  cor:FACTIONS.small.color,seal:'📜',
+  titulo:'A Sabedoria da Mão',
+  texto:'"Vossa Graça, os impostos precisam ser aumentados para financiar as defesas do reino."',
+  speaker:'Otto Hightower, Mão do Rei',
+  simText:'Aumentar os impostos',simEff:{gold:+20,pop:-15,army:+10,drag:0,noble:+5},
+  naoText:'Manter os impostos',naoEff:{gold:-10,pop:+10,army:-5,drag:0,noble:-5},
+  logSim:'Os impostos subiram — os cofres encheram, o povo gemeu.',
+  logNao:'Otto não concordou, mas se curvou à sua vontade.'},
+
+  {id:'corlys_fleet',personagem:'Corlys Velaryon',emoji:'🚢',faction:'neutral',
+  cor:'#1A2A5A',seal:'🦀',
+  titulo:'O Senhor dos Mares',
+  texto:'"Rei, minha frota pode dominar os Narrow Seas — se nossa aliança for formalizada."',
+  speaker:'Lorde Corlys Velaryon',
+  simText:'Formalizar a aliança',simEff:{gold:-10,pop:+5,army:+20,drag:+5,noble:+10},
+  naoText:'Recusar Velaryon',naoEff:{gold:+5,pop:-5,army:-20,drag:0,noble:-15},
+  logSim:'Aliança com Velaryon selada — os mares são nossos.',
+  logNao:'Velaryon afastou-se — e com ele, sua frota imbatível.'},
+
+  {id:'laenor_marriage',personagem:'Lorde Laenor',emoji:'💍',faction:'targ',
+  cor:'#1A2A5A',seal:'🦀',
+  titulo:'O Casamento de Rhaenyra',
+  texto:'"O casamento com meu filho uniria as casas mais poderosas de Westeros para sempre."',
+  speaker:'Lorde Corlys Velaryon',
+  simText:'Aceitar o casamento',simEff:{gold:+15,pop:+5,army:+15,drag:+10,noble:+10},
+  naoText:'Recusar o casamento',naoEff:{gold:-10,pop:-5,army:-15,drag:-5,noble:-10},
+  logSim:'Laenor e Rhaenyra se casaram — uma aliança histórica forjada.',
+  logNao:'Os Velaryon partiram insatisfeitos — uma aliança perdida.'},
+
+  {id:'aemond_training',personagem:'Príncipe Aemond',emoji:'⚔️',faction:'targ',
+  cor:'#2A0A0A',seal:'🐉',
+  titulo:'O Príncipe Cruel',
+  texto:'"Pai, preciso de um dragão. Vhagar pertence a quem é digno — e eu sou."',
+  speaker:'Príncipe Aemond Targaryen',
+  simText:'Apoiar Aemond',simEff:{gold:-5,pop:-5,army:+10,drag:+15,noble:+5},
+  naoText:'Proibir Aemond',naoEff:{gold:0,pop:+5,army:-5,drag:-10,noble:-5},
+  logSim:'Aemond domou Vhagar — o maior dragão vivo é seu.',
+  logNao:'Aemond foi proibido — e guarda rancor profundo.'},
+
+  // LANNISTER
+  {id:'lannister_gold',personagem:'Tywin Lannister',emoji:'🦁',faction:'lann',
+  cor:FACTIONS.lann.color,seal:'🦁',
+  titulo:'Uma Dívida Lannister',
+  texto:'"Um Lannister sempre paga suas dívidas — e também cobra as alheias. Precisamos de um empréstimo."',
+  speaker:'Lorde Tywin Lannister',
+  simText:'Aceitar o empréstimo',simEff:{gold:+30,pop:-5,army:+10,drag:0,noble:-15},
+  naoText:'Recusar Lannister',naoEff:{gold:-10,pop:0,army:-5,drag:0,noble:+10},
+  logSim:'Ouro Lannister encheu os cofres — com juros altos.',
+  logNao:'Os Lannisters foram recusados — mas nunca esquecem.'},
+
+  {id:'cersei_advice',personagem:'Cersei Lannister',emoji:'👸',faction:'lann',
+  cor:'#6B5000',seal:'🦁',
+  titulo:'A Leoa de Casterly Rock',
+  texto:'"Elimine seus inimigos antes que eles o eliminem. A fraqueza é uma escolha fatal."',
+  speaker:'Cersei Lannister',
+  simText:'Agir contra os rivais',simEff:{gold:-15,pop:-10,army:+15,drag:0,noble:-20},
+  naoText:'Ignorar o conselho',naoEff:{gold:0,pop:+5,army:-5,drag:0,noble:+10},
+  logSim:'Rivais foram silenciados — mas a corte ficou com medo.',
+  logNao:'Cersei partiu com desdém — não servirá a um rei fraco.'},
+
+  {id:'jaime_guard',personagem:'Jaime Lannister',emoji:'🗡️',faction:'lann',
+  cor:'#6B5000',seal:'🦁',
+  titulo:'O Matador de Reis',
+  texto:'"Preciso de suas ordens, Majestade. Quem devo proteger — e de quem devo protegê-lo?"',
+  speaker:'Ser Jaime Lannister, Guarda Real',
+  simText:'Confiar em Jaime',simEff:{gold:0,pop:+5,army:+15,drag:0,noble:+5},
+  naoText:'Desconfiar de Jaime',naoEff:{gold:0,pop:-5,army:-10,drag:0,noble:0},
+  logSim:'Jaime jurou lealdade — e o rei dormiu mais tranquilo.',
+  logNao:'Jaime notou a desconfiança — e sua lealdade vacilou.'},
+
+  // STARK
+  {id:'ned_honor',personagem:'Eddard Stark',emoji:'🐺',faction:'stark',
+  cor:FACTIONS.stark.color,seal:'🐺',
+  titulo:'A Honra do Norte',
+  texto:'"O Norte se curva apenas à honra e à justiça. Cumpra sua palavra ou perca o Norte."',
+  speaker:'Lorde Eddard Stark, Senhor de Winterfell',
+  simText:'Honrar os acordos',simEff:{gold:-10,pop:+15,army:+10,drag:0,noble:+10},
+  naoText:'Ignorar o pedido',naoEff:{gold:+5,pop:-15,army:-15,drag:0,noble:-10},
+  logSim:'O Norte permanece leal — Ned Stark honrado.',
+  logNao:'Ned Stark partiu sombrio — o Norte observa.'},
+
+  {id:'robb_army',personagem:'Robb Stark',emoji:'🗡️',faction:'stark',
+  cor:'#1A2A3A',seal:'🐺',
+  titulo:'O Jovem Lobo',
+  texto:'"Convoque meu exército e juntos varremos qualquer ameaça do Norte ao Sul."',
+  speaker:'Robb Stark, Rei do Norte',
+  simText:'Convocar o exército',simEff:{gold:-15,pop:-5,army:+25,drag:0,noble:-5},
+  naoText:'Dispensar o exército',naoEff:{gold:+10,pop:0,army:-20,drag:0,noble:0},
+  logSim:'O exército de Robb marchou — poderoso e determinado.',
+  logNao:'Robb foi dispensado — mas prometeu voltar quando necessário.'},
+
+  {id:'sansa_hostage',personagem:'Sansa Stark',emoji:'🌸',faction:'stark',
+  cor:'#2A3A4A',seal:'🐺',
+  titulo:'A Refém de Valor',
+  texto:'"Liberte-me, Majestade. Minha família pagará bem — e o Norte nunca esquece bondade."',
+  speaker:'Lady Sansa Stark',
+  simText:'Libertar Sansa',simEff:{gold:+10,pop:+10,army:-5,drag:0,noble:+15},
+  naoText:'Manter Sansa refém',naoEff:{gold:0,pop:-10,army:+5,drag:0,noble:-20},
+  logSim:'Sansa foi libertada — um gesto de boa vontade com o Norte.',
+  logNao:'Sansa permanece refém — o Norte anseia por vingança.'},
+
+  // GREYJOY
+  {id:'theon_loyalty',personagem:'Theon Greyjoy',emoji:'🦑',faction:'greyjoy',
+  cor:FACTIONS.greyjoy.color,seal:'🦑',
+  titulo:'O Homem do Ferro',
+  texto:'"Sou leal a você, mas as Ilhas de Ferro precisam de autonomia ou meu pai se revoltará."',
+  speaker:'Theon Greyjoy',
+  simText:'Conceder autonomia',simEff:{gold:-10,pop:+5,army:+10,drag:0,noble:-10},
+  naoText:'Negar autonomia',naoEff:{gold:+5,pop:-5,army:-15,drag:0,noble:+5},
+  logSim:'As Ilhas de Ferro receberam autonomia limitada — Theon agradeceu.',
+  logNao:'Theon ficou dividido entre deveres — a revolta Greyjoy se aproxima.'},
+
+  {id:'euron_fleet',personagem:'Euron Greyjoy',emoji:'🌊',faction:'greyjoy',
+  cor:'#0A1A2A',seal:'🦑',
+  titulo:'O Corvo Vermelho',
+  texto:'"Dê-me um dragão e construirei um império nas ondas para você, Majestade."',
+  speaker:'Euron Greyjoy, Rei das Ilhas de Ferro',
+  simText:'Negociar com Euron',simEff:{gold:-20,pop:-10,army:+20,drag:-10,noble:-10},
+  naoText:'Recusar Euron',naoEff:{gold:0,pop:+5,army:-10,drag:+5,noble:+5},
+  logSim:'Euron partiu satisfeito — e assustadoramente poderoso.',
+  logNao:'Euron riu — ele conseguirá o que quer de outro modo.'},
+
+  // TYRELL
+  {id:'margaery_marriage',personagem:'Margaery Tyrell',emoji:'🌹',faction:'tyrell',
+  cor:FACTIONS.tyrell.color,seal:'🌹',
+  titulo:'A Rosa do Sul',
+  texto:'"Um casamento com minha família garantiria alimentos e lealdade do Reach eternamente."',
+  speaker:'Margaery Tyrell',
+  simText:'Aceitar a aliança',simEff:{gold:+15,pop:+20,army:+10,drag:0,noble:+15},
+  naoText:'Recusar os Tyrell',naoEff:{gold:-10,pop:-15,army:-5,drag:0,noble:-10},
+  logSim:'Os Tyrell tornaram-se aliados — o Reach floresceu.',
+  logNao:'Os Tyrell ficaram ofendidos — o Reach pode virar inimigo.'},
+
+  {id:'olenna_advice',personagem:'Olenna Tyrell',emoji:'👴',faction:'tyrell',
+  cor:'#2A4A1A',seal:'🌹',
+  titulo:'A Rainha dos Espinhos',
+  texto:'"Ouça, jovem governante — seu maior inimigo dorme em sua própria corte."',
+  speaker:'Olenna Tyrell, Rainha dos Espinhos',
+  simText:'Aceitar a dica',simEff:{gold:-5,pop:+5,army:+10,drag:0,noble:-10},
+  naoText:'Ignorar Olenna',naoEff:{gold:0,pop:-5,army:-5,drag:0,noble:+5},
+  logSim:'O traidor foi descoberto — Olenna sorriu discretamente.',
+  logNao:'O traidor permanece oculto — exatamente como Olenna previu.'},
+
+  // FAITH
+  {id:'high_sparrow',personagem:'Alto Pardal',emoji:'✝️',faction:'faith',
+  cor:FACTIONS.faith.color,seal:'⭐',
+  titulo:'O Servo dos Sete',
+  texto:'"O Trono deve se dobrar aos Sete, Majestade. A fé não negocia — ela ordena."',
+  speaker:'Alto Pardal',
+  simText:'Ceder à Igreja',simEff:{gold:-15,pop:+15,army:-5,drag:-10,noble:-15},
+  naoText:'Resistir à Igreja',naoEff:{gold:+5,pop:-15,army:+5,drag:+5,noble:+10},
+  logSim:'A Igreja recebeu poder — e o povo aprovou. Por enquanto.',
+  logNao:'O Alto Pardal declarou sua oposição — a fé é uma arma.'},
+
+  {id:'septon_blessing',personagem:'Septon Eustace',emoji:'🕊️',faction:'faith',
+  cor:'#2A2A5A',seal:'⭐',
+  titulo:'A Bênção Real',
+  texto:'"Uma peregrinação ao Templo dos Sete aumentaria sua legitimidade, Majestade."',
+  speaker:'Septon Eustace',
+  simText:'Fazer a peregrinação',simEff:{gold:-10,pop:+10,army:0,drag:-5,noble:+10},
+  naoText:'Dispensar o Septon',naoEff:{gold:0,pop:-5,army:0,drag:+5,noble:-5},
+  logSim:'A peregrinação foi feita — o povo viu um rei humilde.',
+  logNao:'O Septon partiu — a bênção dos Sete não virá tão cedo.'},
+
+  // DRAGONS
+  {id:'dragon_egg',personagem:'Ovo de Dragão',emoji:'🥚',faction:'targ',
+  cor:'#4A1A0A',seal:'🔥',
+  titulo:'O Ovo Misterioso',
+  texto:'Um ovo de dragão foi encontrado nas ruínas de Valyria — mas incubá-lo custa fortunas.',
+  speaker:'Mestre Gyldayn, Arquivista Real',
+  simText:'Incubar o ovo',simEff:{gold:-25,pop:0,army:0,drag:+25,noble:0},
+  naoText:'Guardar o ovo',naoEff:{gold:0,pop:0,army:0,drag:+5,noble:0},
+  logSim:'Um novo dragão nasceu — Targaryen aumentou seu poder.',
+  logNao:'O ovo foi selado em ouro — um tesouro inestimável.'},
+
+  {id:'dragon_sick',personagem:'Maester Gerardys',emoji:'🩺',faction:'citadel',
+  cor:FACTIONS.citadel.color,seal:'📚',
+  titulo:'O Dragão Adoeceu',
+  texto:'"Majestade, Syrax está com febre de dragão. Precisamos de ervas raras das Terras Disputadas."',
+  speaker:'Maester Gerardys',
+  simText:'Enviar expedição',simEff:{gold:-20,pop:0,army:-10,drag:+15,noble:0},
+  naoText:'Não tratar o dragão',naoEff:{gold:0,pop:0,army:0,drag:-20,noble:0},
+  logSim:'A expedição retornou com as ervas — Syrax se recuperou.',
+  logNao:'Syrax piorou — um dragão doente é imprevisível e perigoso.'},
+
+  {id:'dragon_rider',personagem:'Jacaerys Velaryon',emoji:'🐉',faction:'targ',
+  cor:'#5C0000',seal:'🐉',
+  titulo:'O Jovem Jinete',
+  texto:'"Vovô, permita-me montar Vermax em combate. Já tenho idade suficiente!"',
+  speaker:'Jacaerys Velaryon, neto de Rhaenyra',
+  simText:'Autorizar o combate',simEff:{gold:0,pop:+10,army:+15,drag:+10,noble:0},
+  naoText:'Proibir o jovem',naoEff:{gold:0,pop:-5,army:-5,drag:-5,noble:0},
+  logSim:'Jacaerys montou Vermax em batalha — uma cena gloriosa.',
+  logNao:'Jacaerys foi proibido — e treinou mais em segredo.'},
+
+  // CITADEL / MAESTERS
+  {id:'maester_cure',personagem:'Archmaester Marwyn',emoji:'📚',faction:'citadel',
+  cor:FACTIONS.citadel.color,seal:'📚',
+  titulo:'A Cura Proibida',
+  texto:'"Descobri uma cura para a Dança das Trevas — mas ela envolve magia antiga. A Cidadela aprova."',
+  speaker:'Archmaester Marwyn',
+  simText:'Aceitar a cura',simEff:{gold:-10,pop:+20,army:0,drag:+5,noble:-10},
+  naoText:'Recusar a magia',naoEff:{gold:0,pop:-10,army:0,drag:0,noble:+5},
+  logSim:'A doença recuou — o povo chamou o rei de abençoado.',
+  logNao:'A epidemia continuou — a Cidadela ficou decepcionada.'},
+
+  {id:'grand_maester',personagem:'Maester Orwyle',emoji:'⛓️',faction:'citadel',
+  cor:'#1A3A3A',seal:'📚',
+  titulo:'O Conselho do Sábio',
+  texto:'"Majestade, as estrelas preveem uma guerra de sucessão. Devemos preparar um plano de paz."',
+  speaker:'Maester Orwyle, Grão-Maestre',
+  simText:'Aceitar o plano',simEff:{gold:-10,pop:+10,army:-10,drag:0,noble:+10},
+  naoText:'Ignorar o aviso',naoEff:{gold:0,pop:-5,army:+5,drag:0,noble:-5},
+  logSim:'O plano de paz foi elaborado — e guardado em segredo.',
+  logNao:'O Grão-Maestre anotou o descaso em suas crônicas.'},
+
+  // ESSOS
+  {id:'dothraki_alliance',personagem:'Khal Drogo',emoji:'🏇',faction:'essos',
+  cor:FACTIONS.essos.color,seal:'🌙',
+  titulo:'O Khal de Khals',
+  texto:'"Dê-me a Khaleesi e eu conquistarei Westeros com cem mil cavaleiros Dothraki."',
+  speaker:'Khal Drogo, o Invicto',
+  simText:'Aceitar a aliança',simEff:{gold:-20,pop:-10,army:+30,drag:+10,noble:-20},
+  naoText:'Recusar os Dothraki',naoEff:{gold:0,pop:+5,army:-10,drag:0,noble:+5},
+  logSim:'O Khal e sua khalasar se uniram — uma força devastadora.',
+  logNao:'O Khal partiu — mas pode voltar como inimigo.'},
+
+  {id:'free_cities',personagem:'Facchion de Braavos',emoji:'🏦',faction:'essos',
+  cor:'#2A1A4A',seal:'🌙',
+  titulo:'O Banco de Braavos',
+  texto:'"Vossa Graça, o Banco de Braavos oferece financiamento ilimitado — com contrapartidas simples."',
+  speaker:'Facchion, Representante do Banco de Braavos',
+  simText:'Aceitar o financiamento',simEff:{gold:+30,pop:0,army:+10,drag:0,noble:-10},
+  naoText:'Recusar o banco',naoEff:{gold:-5,pop:0,army:-5,drag:0,noble:+5},
+  logSim:'O banco financiou o reino — com juros implacáveis.',
+  logNao:'O banco anotou o nome — e não esquecerá.'},
+
+  {id:'daenerys_vision',personagem:'Daenerys Targaryen',emoji:'🐲',faction:'targ',
+  cor:'#5C0000',seal:'🔥',
+  titulo:'A Mãe dos Dragões',
+  texto:'"Sangue de meu sangue — os dragões são nossa herança. Devemos libertá-los de todas as correntes."',
+  speaker:'Daenerys Targaryen, Khaleesi',
+  simText:'Libertar os dragões',simEff:{gold:-10,pop:-15,army:+20,drag:+25,noble:-15},
+  naoText:'Manter os dragões acorrentados',naoEff:{gold:0,pop:+10,army:-10,drag:-10,noble:+10},
+  logSim:'Os dragões foram libertos — e o mundo tremeu.',
+  logNao:'Os dragões uivaram nas correntes — sua frustração crescia.'},
+
+  // SMALL COUNCIL
+  {id:'hand_petition',personagem:'Mão do Rei',emoji:'👋',faction:'small',
+  cor:FACTIONS.small.color,seal:'📜',
+  titulo:'A Petição da Mão',
+  texto:'"Precisamos de um novo Lorde Comandante da Guarda Real — a posição está vaga há semanas."',
+  speaker:'Mão do Rei',
+  simText:'Nomear rapidamente',simEff:{gold:-5,pop:+5,army:+15,drag:0,noble:-5},
+  naoText:'Postergar a nomeação',naoEff:{gold:0,pop:-5,army:-10,drag:0,noble:0},
+  logSim:'A Guarda Real ganhou novo Lorde Comandante.',
+  logNao:'A Guarda Real fica sem liderança — perigoso em tempos difíceis.'},
+
+  {id:'lord_commander',personagem:'Ser Criston Cole',emoji:'🛡️',faction:'small',
+  cor:'#2A1A0A',seal:'📜',
+  titulo:'O Protetor do Trono',
+  texto:'"Majestade, a Guarda Real precisa de novos recrutas. Permita-me selecionar pessoalmente."',
+  speaker:'Ser Criston Cole, Lorde Comandante',
+  simText:'Autorizar os recrutas',simEff:{gold:-10,pop:0,army:+15,drag:0,noble:0},
+  naoText:'Negar a seleção',naoEff:{gold:+5,pop:0,army:-10,drag:0,noble:0},
+  logSim:'Cole selecionou os melhores — a Guarda Real foi fortalecida.',
+  logNao:'Cole ficou contrariado — a Guarda enfraqueceu.'},
+
+  {id:'rhaenys_warning',personagem:'Rhaenys Targaryen',emoji:'🐉',faction:'targ',
+  cor:'#3A0A5A',seal:'🐉',
+  titulo:'A Rainha Que Nunca Foi',
+  texto:'"Ouça-me, Majestade — a Dança dos Dragões se aproxima. Escolha um lado antes que seja tarde."',
+  speaker:'Rhaenys Targaryen, a Rainha Que Nunca Foi',
+  simText:'Hevar bem o aviso',simEff:{gold:0,pop:+5,army:+10,drag:+10,noble:0},
+  naoText:'Ignorar Rhaenys',naoEff:{gold:0,pop:-5,army:-5,drag:-10,noble:0},
+  logSim:'O aviso de Rhaenys foi ouvido — e preparações foram feitas.',
+  logNao:'Rhaenys afastou-se — ela sempre sabia quando não era ouvida.'},
+
+  // NEUTRAL EVENTS
+  {id:'smallfolk_revolt',personagem:'Povo Revoltado',emoji:'🔥',faction:'neutral',
+  cor:'#3A2A0A',seal:'⚖️',
+  titulo:'A Revolta nas Ruas',
+  texto:'Multidões enfurecidas marcharam para o Castelo Craster — o povo quer justiça e comida.',
+  speaker:'Mensageiro do Capitão da Guarda',
+  simText:'Atender as demandas',simEff:{gold:-20,pop:+25,army:-5,drag:0,noble:-10},
+  naoText:'Dispersar com força',naoEff:{gold:+5,pop:-25,army:+10,drag:0,noble:0},
+  logSim:'O povo foi atendido — a revolta cessou, desta vez.',
+  logNao:'A revolta foi esmagada — mas o ódio cresce nas entranhas.'},
+
+  {id:'plague_south',personagem:'Médico Real',emoji:'🩺',faction:'neutral',
+  cor:'#2A2A2A',seal:'⚖️',
+  titulo:'A Praga do Sul',
+  texto:'"Uma febre mortal assola as terras do sul. Precisamos de quarentenas e remédios caros."',
+  speaker:'Médico Real Gerardys',
+  simText:'Impor quarentena',simEff:{gold:-20,pop:+20,army:-10,drag:0,noble:-5},
+  naoText:'Ignorar a praga',naoEff:{gold:0,pop:-30,army:-5,drag:0,noble:-5},
+  logSim:'A quarentena salvou milhares — custou uma fortuna.',
+  logNao:'A praga se alastrou — o povo pagou com a vida.'},
+
+  {id:'drought',personagem:'Mensageiro do Norte',emoji:'🌾',faction:'neutral',
+  cor:'#3A2A1A',seal:'⚖️',
+  titulo:'A Grande Seca',
+  texto:'"Três colheitas seguidas falharam. O povo morre de fome de Dorne ao Vale de Arryn."',
+  speaker:'Mensageiro Real',
+  simText:'Abrir os celeiros reais',simEff:{gold:-25,pop:+25,army:0,drag:0,noble:0},
+  naoText:'Conservar as reservas',naoEff:{gold:+10,pop:-25,army:0,drag:0,noble:0},
+  logSim:'Os celeiros foram abertos — o povo sobreviveu o inverno.',
+  logNao:'O inverno matou muitos — e o povo não esqueceu.'},
+
+  {id:'tournament',personagem:'Heraldo Real',emoji:'🏆',faction:'neutral',
+  cor:'#5A4A00',seal:'⚖️',
+  titulo:'O Grande Torneio',
+  texto:'"Um torneio real celebraria seu reinado e atrairia lordes de toda Westeros."',
+  speaker:'Heraldo Real',
+  simText:'Organizar o torneio',simEff:{gold:-20,pop:+20,army:+5,drag:0,noble:+15},
+  naoText:'Cancelar o torneio',naoEff:{gold:+5,pop:-10,army:-5,drag:0,noble:-15},
+  logSim:'O torneio foi uma glória — lordes e povo aplaudiram.',
+  logNao:'O torneio cancelado frustrou a nobreza.'},
+
+  {id:'spy_caught',personagem:'Espião Capturado',emoji:'🕵️',faction:'neutral',
+  cor:'#1A1A3A',seal:'⚖️',
+  titulo:'O Traidor na Corte',
+  texto:'"Majestade, capturamos um espião Lannister transmitindo segredos militares."',
+  speaker:'Varys, o Araço',
+  simText:'Executar publicamente',simEff:{gold:0,pop:+5,army:+10,drag:0,noble:-15},
+  naoText:'Usar como agente duplo',simEff:{gold:+10,pop:-5,army:+5,drag:0,noble:+5},
+  logSim:'A execução foi pública — um aviso para todos os traidores.',
+  logNao:'O espião agora trabalha para nós — um trunfo valioso.'},
+
+  {id:'night_watch',personagem:'Lorde Comandante Mormont',emoji:'🦅',faction:'neutral',
+  cor:'#1A1A1A',seal:'⚖️',
+  titulo:'A Guarda da Noite',
+  texto:'"Majestade, a Muralha precisa de homens e suprimentos. Além dela, o perigo é real."',
+  speaker:'Lorde Comandante Mormont',
+  simText:'Enviar reforços',simEff:{gold:-15,pop:+5,army:-10,drag:0,noble:+5},
+  naoText:'Negar os reforços',naoEff:{gold:+5,pop:0,army:+5,drag:0,noble:-5},
+  logSim:'A Muralha recebeu homens — o Norte ficou grato.',
+  logNao:'A Guarda foi enfraquecida — algo além da Muralha aguarda.'},
+
+  {id:'wedding_red',personagem:'Walder Frey',emoji:'🎭',faction:'neutral',
+  cor:'#3A1A1A',seal:'⚖️',
+  titulo:'O Festim dos Frey',
+  texto:'"Venha ao nosso casamento, Majestade. Os Frey garantem... hospitalidade inesquecível."',
+  speaker:'Walder Frey, Senhor do Cruzamento',
+  simText:'Aceitar o convite',simEff:{gold:+15,pop:+10,army:-20,drag:0,noble:+5},
+  naoText:'Recusar o convite',naoEff:{gold:-5,pop:0,army:+5,drag:0,noble:-10},
+  logSim:'O festim foi... memorável. Não da forma esperada.',
+  logNao:'Uma decisão sábia — as muralhas dos Frey escondem muitos segredos.'},
+
+  {id:'varys_whispers',personagem:'Varys',emoji:'🕊️',faction:'small',
+  cor:'#2A1A3A',seal:'📜',
+  titulo:'Os Sussurros de Varys',
+  texto:'"Meus pequenos pássaros cantam, Majestade — uma conspiração se forma entre seus aliados."',
+  speaker:'Varys, Mestre dos Sussurros',
+  simText:'Agir imediatamente',simEff:{gold:-10,pop:0,army:+10,drag:0,noble:-15},
+  naoText:'Investigar primeiro',naoEff:{gold:0,pop:+5,army:0,drag:0,noble:-5},
+  logSim:'A conspiração foi debelada — Varys sorriu misteriosamente.',
+  logNao:'A investigação revelou mais que esperado.'},
+
+  {id:'tyrion_wisdom',personagem:'Tyrion Lannister',emoji:'🍷',faction:'lann',
+  cor:'#6B5000',seal:'🦁',
+  titulo:'O Homem da Mente',
+  texto:'"Posso ser a Mão que seu reino precisa — se me der a chance de provar isso."',
+  speaker:'Tyrion Lannister',
+  simText:'Nomear Tyrion Mão',simEff:{gold:+15,pop:+10,army:+10,drag:0,noble:-10},
+  naoText:'Recusar Tyrion',naoEff:{gold:-5,pop:-5,army:-5,drag:0,noble:+5},
+  logSim:'Tyrion como Mão foi uma escolha brilhante — e controversa.',
+  logNao:'Tyrion tomou mais um cálice de vinho — e esperou sua hora.'},
+
+  {id:'winter_coming',personagem:'Mensageiro do Norte',emoji:'❄️',faction:'stark',
+  cor:'#0A1A2A',seal:'🐺',
+  titulo:'O Inverno Chegou',
+  texto:'"O inverno se instalou — sete anos de neve e fome se anunciam no horizonte."',
+  speaker:'Mensageiro de Winterfell',
+  simText:'Preparar reservas',simEff:{gold:-25,pop:+15,army:0,drag:0,noble:0},
+  naoText:'Confiar na primavera',naoEff:{gold:+10,pop:-20,army:-5,drag:0,noble:-5},
+  logSim:'O reino se preparou — milho e carvão encheram os celeiros.',
+  logNao:'A aposta na primavera custou vidas — e confiança.'},
+
+  {id:'arya_training',personagem:'Syrio Forel',emoji:'🗡️',faction:'neutral',
+  cor:'#2A1A3A',seal:'⚖️',
+  titulo:'O Primeiro Espadachim',
+  texto:'"Majestade, tenho uma aluna excepcional — mas preciso de seu patrocínio para continuar."',
+  speaker:'Syrio Forel, Primeiro Espadachim de Braavos',
+  simText:'Patrocinar o treino',simEff:{gold:-10,pop:+5,army:+10,drag:0,noble:0},
+  naoText:'Recusar o patrocínio',naoEff:{gold:0,pop:-5,army:-5,drag:0,noble:0},
+  logSim:'O treino continuou — uma assassina começou a tomar forma.',
+  logNao:'Syrio partiu — e levou sua aluna para caminhos obscuros.'},
+
+  {id:'bran_vision',personagem:'Bran Stark',emoji:'🦅',faction:'stark',
+  cor:'#1A2A3A',seal:'🐺',
+  titulo:'O Corvo de Três Olhos',
+  texto:'"Vejo o futuro, Majestade — e vejo você cair. A menos que mude de caminho hoje."',
+  speaker:'Bran Stark, o Corvo de Três Olhos',
+  simText:'Ouvir a visão',simEff:{gold:0,pop:0,army:+5,drag:+10,noble:0},
+  naoText:'Ignorar o menino',naoEff:{gold:0,pop:-5,army:-5,drag:-5,noble:0},
+  logSim:'A visão revelou um traidor — e o rei agiu antes.',
+  logNao:'O rei riu das visões — e pagou mais tarde.'},
+];
+
+// ===================== LEGENDARY CARDS =====================
+const LEGENDARY=[
+  {id:'leg_dance_dragons',personagem:'A Dança dos Dragões',emoji:'⚔️🐉',faction:'targ',
+  cor:'#8B0000',seal:'🔥',
+  titulo:'EVENTO LENDÁRIO: A Dança dos Dragões',
+  texto:'A guerra civil Targaryen explodiu. Rhaenyra e Aegon II disputam o Trono de Ferro com dragões e sangue.',
+  speaker:'Crônicas da Cidadela',
+  simText:'Apoiar Rhaenyra (Pretos)',simEff:{gold:-20,pop:+10,army:-10,drag:+20,noble:-20},
+  naoText:'Apoiar Aegon II (Verdes)',naoEff:{gold:-20,pop:-10,army:+10,drag:-10,noble:+20},
+  logSim:'Aliança com os Pretos selada — a guerra civil começou.',
+  logNao:'Aliança com os Verdes — o sangue Targaryen irá se derramar.'},
+
+  {id:'leg_field_fire',personagem:'Balerion, o Terror Negro',emoji:'🔥🐉',faction:'targ',
+  cor:'#6B0000',seal:'🔥',
+  titulo:'EVENTO LENDÁRIO: O Campo do Fogo',
+  texto:'Balerion, o Terror Negro, sobrevoou os exércitos inimigos — e o mundo viu o que os dragões fazem na guerra.',
+  speaker:'Esgoto das Batalhas',
+  simText:'Desencadear Balerion',simEff:{gold:+10,pop:-20,army:+30,drag:-10,noble:-10},
+  naoText:'Poupar o inimigo',naoEff:{gold:-10,pop:+20,army:-20,drag:+5,noble:+20},
+  logSim:'O Campo do Fogo ardeu — os inimigos se curvaram ou morreram.',
+  logNao:'Clemência foi mostrada — alguns chamaram de fraqueza.'},
+
+  {id:'leg_walkers',personagem:'O Rei da Noite',emoji:'❄️👻',faction:'neutral',
+  cor:'#0A1A3A',seal:'⚡',
+  titulo:'EVENTO LENDÁRIO: Além da Muralha',
+  texto:'O Rei da Noite quebrou a Muralha. O exercito dos mortos marcha para o Sul — nada pode detê-los sozinho.',
+  speaker:'Irmão da Guarda da Noite',
+  simText:'Unir todos os reinos',simEff:{gold:-30,pop:+20,army:+20,drag:+15,noble:-10},
+  naoText:'Fugir para o sul',naoEff:{gold:+10,pop:-30,army:-30,drag:-10,noble:-20},
+  logSim:'A Grande Aliança foi formada — todos lutaram juntos pela primeira vez.',
+  logNao:'O reino abandonou o Norte — e o Norte nunca esqueceu.'},
+
+  {id:'leg_conquest',personagem:'Aegon, o Conquistador',emoji:'🏰🐉',faction:'targ',
+  cor:'#5C0000',seal:'🔥',
+  titulo:'EVENTO LENDÁRIO: A Conquista de Aegon',
+  texto:'O espírito de Aegon, o Conquistador, fala através do Trono de Ferro — sua herança deve ser honrada.',
+  speaker:'Voz do Primeiro Aegon, Primeiro de Seu Nome',
+  simText:'Seguir o legado',simEff:{gold:+20,pop:+15,army:+15,drag:+20,noble:+10},
+  naoText:'Rejeitar o legado',naoEff:{gold:-20,pop:-15,army:-15,drag:-20,noble:-10},
+  logSim:'O legado de Aegon foi renovado — o Trono brilhou.',
+  logNao:'O legado foi rejeitado — e o Trono perdeu seu brilho.'},
+
+  {id:'leg_long_night',personagem:'A Longa Noite',emoji:'🌑',faction:'neutral',
+  cor:'#0A0A0A',seal:'⚡',
+  titulo:'EVENTO LENDÁRIO: A Longa Noite Retorna',
+  texto:'Os maegeres antigos previam: quando as estrelas alinhassem, a escuridão retornaria. A noite chegou.',
+  speaker:'Archmaestre de Estrelas Fixas',
+  simText:'Invocar os dragões',simEff:{gold:-20,pop:-10,army:+10,drag:-20,noble:-10},
+  naoText:'Fugir para Essos',naoEff:{gold:-30,pop:-20,army:-20,drag:-10,noble:-30},
+  logSim:'Os dragões foram invocados — a Longa Noite recuou ao preço de sangue.',
+  logNao:'O reino foi abandonado — um exílio de gerações.'},
+];
+
+// ===================== SPECIAL EVENTS (triggered by stats) =====================
+const EVENTS=[
+  {id:'ev_poor',icon:'💸',title:'Tesouro Esgotado',
+  text:'Os cofres reais estão quase vazios. Os mercadores exigem pagamento imediato ou haverá desabastecimento.',
+  triggerStat:'gold',triggerVal:15,used:false},
+  
+  {id:'ev_revolt',icon:'🔥',title:'Revolta Iminente',
+  text:'Bairros inteiros de Desembarque do Rei estão em chamas. O povo não aguenta mais — e a Guarda vacila.',
+  triggerStat:'pop',triggerVal:15,used:false},
+  
+  {id:'ev_coup',icon:'⚔️',title:'Conspiração Militar',
+  text:'Generais insatisfeitos estão conspirando. Um golpe se forma nas sombras da caserna.',
+  triggerStat:'army',triggerVal:15,used:false},
+  
+  {id:'ev_dragon_lost',icon:'🐉',title:'Dragão Perdido',
+  text:'Caraxes foi visto sobrevoando o Mar das Pedras sem cavaleiro. O dragão pode se perder para sempre.',
+  triggerStat:'drag',triggerVal:15,used:false},
+  
+  {id:'ev_noble_plot',icon:'🗡️',title:'Complô dos Nobres',
+  text:'Quatro lordes maiores assinaram em segredo uma petição pela sua deposição. A traição estava na corte.',
+  triggerStat:'noble',triggerVal:15,used:false},
+  
+  {id:'ev_dragon_rage',icon:'🔥',title:'Fúria dos Dragões',
+  text:'Com tantos dragões poderosos, a disputa de território causou destruição em uma aldeia próxima.',
+  triggerStat:'drag',triggerVal:90,used:false},
+  
+  {id:'ev_golden_age',icon:'✨',title:'A Era de Ouro',
+  text:'Os cofres transbordam — o povo chama estes os dias mais prósperos do reinado Targaryen.',
+  triggerStat:'gold',triggerVal:90,used:false},
+];
+
+// ===================== GAME STATE =====================
+let gold=50,pop=50,army=50,drag=50,noble=50,year=1;
+let currentCard=null,isAnimating=false;
+let isDrag=false,dragStartX=0,currentOffsetX=0;
+let achievements=[],chronLog=[],eventsTriggered=new Set();
+let legendaryUsed=new Set();
+let deck=[],deckIdx=0;
+
+const cardEl=document.getElementById('card-container');
+const flashEl=document.getElementById('flash');
+
+function clamp(v){return Math.max(0,Math.min(100,v))}
+
+function shuffleDeck(){
+  const arr=[...CARDS];
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function getNextCard(){
+  const roll=Math.random();
+  if(roll<0.04){
+    const avail=LEGENDARY.filter(c=>!legendaryUsed.has(c.id));
+    if(avail.length){
+      const c=avail[Math.floor(Math.random()*avail.length)];
+      legendaryUsed.add(c.id);
+      if(legendaryUsed.size>=LEGENDARY.length) legendaryUsed.clear();
+      return c;
+    }
+  }
+  if(deckIdx>=deck.length){deck=shuffleDeck();deckIdx=0;}
+  return deck[deckIdx++];
+}
+
+function updateHUD(){
+  document.getElementById('year-val').textContent=year;
+  const bars=[
+    ['bar-gold','val-gold',gold],
+    ['bar-pop','val-pop',pop],
+    ['bar-army','val-army',army],
+    ['bar-drag','val-drag',drag],
+    ['bar-noble','val-noble',noble],
+  ];
+  bars.forEach(([bar,val,v])=>{
+    document.getElementById(bar).style.width=v+'%';
+    document.getElementById(val).textContent=v;
+    // danger flash
+    const el=document.getElementById(val);
+    if(v<=15) el.style.animation='breathe 1s ease-in-out infinite';
+    else el.style.animation='none';
+  });
+}
+
+function renderEffects(id,eff){
+  const el=document.getElementById(id);el.innerHTML='';
+  const icons={gold:'💰',pop:'👥',army:'⚔️',drag:'🐉',noble:'⚖️'};
+  let any=false;
+  Object.entries(eff).forEach(([k,v])=>{
+    if(v===0)return;any=true;
+    const d=document.createElement('span');
+    d.className='eff '+(v>0?'pos':'neg');
+    d.textContent=(icons[k]||'')+(v>0?'+':'')+v;
+    el.appendChild(d);
+  });
+  if(!any){const d=document.createElement('span');d.className='eff';d.textContent='—';d.style.color='#5C3E20';el.appendChild(d);}
+}
+
+function resetCard(){
+  currentOffsetX=0;
+  cardEl.style.transition='transform 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+  cardEl.style.transform='translateX(-50%) rotate(0deg)';
+  cardEl.style.opacity='1';
+  ['hint-L','hint-R'].forEach(id=>document.getElementById(id).style.opacity='0');
+  ['swipe-L','swipe-R'].forEach(id=>document.getElementById(id).style.opacity='0');
+  setTimeout(()=>{cardEl.style.transition=''},400);
+}
+
+function loadCard(card){
+  currentCard=card;
+  const f=FACTIONS[card.faction]||FACTIONS.neutral;
+  document.getElementById('card-faction').textContent=f.name;
+  document.getElementById('card-faction').style.color=card.cor;
+  document.getElementById('card-title').textContent=card.titulo;
+  document.getElementById('card-title').style.color='#18100A';
+  document.getElementById('card-text').textContent=card.texto;
+  document.getElementById('card-speaker').textContent='— '+card.speaker;
+  document.getElementById('card-stripe').style.background=card.cor;
+  document.getElementById('card-wax-seal').textContent=card.seal||f.seal||'📜';
+  document.getElementById('char-emoji').textContent=card.emoji;
+  document.getElementById('char-name-label').textContent=card.personagem.toUpperCase().slice(0,18);
+  document.getElementById('choice-yes-text').textContent=card.simText||'';
+  document.getElementById('choice-no-text').textContent=card.naoText||'';
+  renderEffects('eff-yes',card.simEff||card.sim||{});
+  renderEffects('eff-no',card.naoEff||card.nao||{});
+  resetCard();
+}
+
+function checkEvents(){
+  for(const ev of EVENTS){
+    if(ev.used||eventsTriggered.has(ev.id)) continue;
+    let stat=0;
+    if(ev.triggerStat==='gold') stat=gold;
+    else if(ev.triggerStat==='pop') stat=pop;
+    else if(ev.triggerStat==='army') stat=army;
+    else if(ev.triggerStat==='drag') stat=drag;
+    else if(ev.triggerStat==='noble') stat=noble;
+    if(ev.triggerVal<50 && stat<=ev.triggerVal){
+      eventsTriggered.add(ev.id);
+      triggerEvent(ev);
+      return true;
+    }
+    if(ev.triggerVal>50 && stat>=ev.triggerVal){
+      eventsTriggered.add(ev.id);
+      triggerEvent(ev);
+      return true;
+    }
+  }
+  return false;
+}
+
+function triggerEvent(ev){
+  document.getElementById('ev-icon').textContent=ev.icon;
+  document.getElementById('ev-title').textContent=ev.title;
+  document.getElementById('ev-text').textContent=ev.text;
+  document.getElementById('event-overlay').classList.add('show');
+}
+function closeEvent(){
+  document.getElementById('event-overlay').classList.remove('show');
+}
+
+function applyChoice(type){
+  if(!currentCard||isAnimating) return;
+  isAnimating=true;
+  const eff=type==='yes'?(currentCard.simEff||currentCard.sim):(currentCard.naoEff||currentCard.nao);
+  Object.entries(eff).forEach(([k,v])=>{
+    if(k==='gold') gold=clamp(gold+v);
+    else if(k==='pop') pop=clamp(pop+v);
+    else if(k==='army') army=clamp(army+v);
+    else if(k==='drag') drag=clamp(drag+v);
+    else if(k==='noble') noble=clamp(noble+v);
+  });
+  const logText=type==='yes'?(currentCard.logSim||'Aceito.'):(currentCard.logNao||'Recusado.');
+  addLog(year,logText);
+  year++;
+  checkAchievements();
+  updateHUD();
+
+  const col=type==='yes'?'rgba(46,92,46,0.3)':'rgba(139,26,26,0.3)';
+  flashEl.style.background=col;flashEl.style.opacity='1';
+  setTimeout(()=>flashEl.style.opacity='0',250);
+
+  const dir=type==='yes'?-1:1;
+  cardEl.style.transition='transform 0.35s cubic-bezier(0.55,0,1,0.45),opacity 0.35s';
+  cardEl.style.transform=`translateX(calc(-50% + ${dir*450}px)) rotate(${dir*18}deg)`;
+  cardEl.style.opacity='0';
+
+  setTimeout(()=>{
+    if(checkGameOver()) return;
+    if(checkEvents()){isAnimating=false;}
+    cardEl.style.transition='none';
+    cardEl.style.transform='translateX(-50%) translateY(40px) scale(0.94)';
+    cardEl.style.opacity='0';
+    const next=getNextCard();
+    loadCard(next);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      cardEl.style.transition='transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s';
+      cardEl.style.transform='translateX(-50%) translateY(0) scale(1)';
+      cardEl.style.opacity='1';
+      setTimeout(()=>{cardEl.style.transition='';isAnimating=false;},460);
+    }));
+  },370);
+}
+
+function checkAchievements(){
+  const defs=[
+    {id:'10anos',label:'10 Anos de Reinado',check:()=>year>=10},
+    {id:'25anos',label:'25 Anos de Reinado',check:()=>year>=25},
+    {id:'50anos',label:'A Dinastia Eterna',check:()=>year>=50},
+    {id:'100anos',label:'Lenda Viva de Westeros',check:()=>year>=100},
+    {id:'ricomax',label:'Os Cofres Transbordaram',check:()=>gold>=95},
+    {id:'exmax',label:'Senhor de Guerra',check:()=>army>=95},
+    {id:'dragmax',label:'Mãe dos Dragões',check:()=>drag>=95},
+    {id:'noblemax',label:'Amado pela Nobreza',check:()=>noble>=95},
+    {id:'popmax',label:'Pai do Povo',check:()=>pop>=95},
+  ];
+  defs.forEach(d=>{
+    if(!achievements.find(a=>a.id===d.id) && d.check()){
+      achievements.push({id:d.id,label:d.label});
+    }
+  });
+}
+
+function addLog(yr,text){
+  chronLog.unshift({yr,text});
+  if(chronLog.length>20) chronLog.pop();
+  const el=document.getElementById('log-entries');
+  el.innerHTML=chronLog.map(e=>`<div class="log-entry"><span class="log-year">Ano ${e.yr}:</span> ${e.text}</div>`).join('');
+}
+
+function toggleLog(){
+  document.getElementById('log-panel').classList.toggle('show');
+}
+
+function checkGameOver(){
+  let cause='';
+  if(gold<=0) cause='Os cofres reais secaram — mercadores e lordes abandonaram o Trono.';
+  else if(pop<=0) cause='O povo de Desembarque do Rei invadiu o castelo. O rei foi deposto.';
+  else if(army<=0) cause='O exército desertou — um senhor da guerra tomou o Trono de Ferro.';
+  else if(drag<=0) cause='Sem dragões, a Casa Targaryen perdeu o símbolo de seu poder — e o trono.';
+  else if(noble<=0) cause='Os lordes voltaram seus estandartes — e o reino se fragmentou.';
+  if(!cause) return false;
+  showGameOver(cause);
+  return true;
+}
+
+function showGameOver(cause){
+  document.getElementById('go-icon').textContent=year>30?'🏆':year>15?'👑':'☠️';
+  document.getElementById('go-cause').textContent=cause;
+  document.getElementById('go-years').textContent=year-1;
+  document.getElementById('go-gold').textContent=gold;
+  document.getElementById('go-pop').textContent=pop;
+  document.getElementById('go-army').textContent=army;
+  document.getElementById('go-drag').textContent=drag;
+  const achEl=document.getElementById('go-achievements');
+  achEl.innerHTML=achievements.map(a=>`<span class="ach-badge">🏅 ${a.label}</span>`).join('');
+  document.getElementById('go-events-seen').textContent=
+    eventsTriggered.size?`Eventos vividos: ${eventsTriggered.size}`:'';
+  setTimeout(()=>document.getElementById('game-over').classList.add('show'),500);
+  isAnimating=false;
+}
+
+// ===================== DRAG =====================
+function updateDrag(dx){
+  const rot=dx*0.04;
+  cardEl.style.transform=`translateX(calc(-50% + ${dx}px)) rotate(${rot}deg)`;
+  currentOffsetX=dx;
+  const pct=Math.min(Math.abs(dx)/100,1);
+  if(dx<-20){
+    document.getElementById('hint-L').style.opacity=Math.min(pct*2,1);
+    document.getElementById('hint-R').style.opacity='0';
+    document.getElementById('swipe-L').style.opacity=pct*0.9;
+    document.getElementById('swipe-R').style.opacity='0';
+  } else if(dx>20){
+    document.getElementById('hint-R').style.opacity=Math.min(pct*2,1);
+    document.getElementById('hint-L').style.opacity='0';
+    document.getElementById('swipe-R').style.opacity=pct*0.9;
+    document.getElementById('swipe-L').style.opacity='0';
+  } else {
+    ['hint-L','hint-R','swipe-L','swipe-R'].forEach(id=>document.getElementById(id).style.opacity='0');
+  }
+}
+function endDrag(){
+  if(!isDrag||isAnimating) return;
+  isDrag=false;cardEl.classList.remove('dragging');
+  if(currentOffsetX<-80) applyChoice('yes');
+  else if(currentOffsetX>80) applyChoice('no');
+  else resetCard();
+}
+cardEl.addEventListener('touchstart',e=>{if(isAnimating)return;isDrag=true;dragStartX=e.touches[0].clientX;cardEl.style.transition='none';},{passive:true});
+cardEl.addEventListener('touchmove',e=>{if(!isDrag||isAnimating)return;updateDrag(e.touches[0].clientX-dragStartX);},{passive:true});
+cardEl.addEventListener('touchend',endDrag);
+cardEl.addEventListener('mousedown',e=>{if(isAnimating)return;isDrag=true;dragStartX=e.clientX;cardEl.style.transition='none';cardEl.classList.add('dragging');});
+window.addEventListener('mousemove',e=>{if(!isDrag||isAnimating)return;updateDrag(e.clientX-dragStartX);});
+window.addEventListener('mouseup',endDrag);
+
+function choose(type){
+  if(isAnimating) return;
+  const dir=type==='yes'?-1:1;
+  cardEl.style.transition='transform 0.2s ease-out';
+  cardEl.style.transform=`translateX(calc(-50% + ${dir*60}px)) rotate(${dir*5}deg)`;
+  setTimeout(()=>applyChoice(type),80);
+}
+
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  deck=shuffleDeck();deckIdx=0;
+  updateHUD();
+  loadCard(getNextCard());
+}
+
+function restartGame(){
+  gold=50;pop=50;army=50;drag=50;noble=50;year=1;
+  achievements=[];chronLog=[];eventsTriggered=new Set();legendaryUsed=new Set();
+  isAnimating=false;isDrag=false;
+  document.getElementById('game-over').classList.remove('show');
+  document.getElementById('log-entries').innerHTML='';
+  document.getElementById('log-panel').classList.remove('show');
+  deck=shuffleDeck();deckIdx=0;
+  updateHUD();
+  cardEl.style.opacity='1';cardEl.style.transform='translateX(-50%)';
+  loadCard(getNextCard());
+}
+</script>
+</body>
+</html>
