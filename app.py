@@ -21,7 +21,10 @@ def memory():
 @app.route("/reigns-H.O.T.D")
 def reignshotd():
     return render_template("trono_de_fogo.html")
-
+    
+@app.route("/Gkamasutra")
+def gkamasutra():
+    return render_template("roleta-kamasutra (1).html")
 app = app
 """if __name__ == "__main__":
     app.run(debug=True)"""
