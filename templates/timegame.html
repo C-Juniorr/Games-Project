@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relógio Cego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0e14;
+    --panel: #121722;
+    --panel-edge: #1d2433;
+    --text: #e8ecef;
+    --muted: #6b7684;
+    --phosphor: #4cffb3;
+    --phosphor-dim: #1f8a63;
+    --amber: #ffb020;
+    --danger: #ff5c5c;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+  }
+
+  body{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(76,255,179,0.06), transparent 60%);
+  }
+
+  .card{
+    width: 100%;
+    max-width: 440px;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 18px;
+    padding: 32px 28px 28px;
+    position: relative;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+
+  .eyebrow{
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  h1{
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .sub{
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 26px;
+  }
+
+  .display-wrap{
+    background: #070a10;
+    border: 1px solid var(--panel-edge);
+    border-radius: 14px;
+    padding: 22px 18px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .display-wrap::before{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.025) 0px,
+      rgba(255,255,255,0.025) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+
+  .target-row{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+  }
+
+  .target-row .val{ color: var(--amber); font-weight: 500; }
+
+  .timer{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--phosphor);
+    text-shadow: 0 0 18px rgba(76,255,179,0.35);
+    line-height: 1;
+    transition: color 0.25s ease, filter 0.2s ease;
+  }
+
+  .timer.hidden-state{
+    color: var(--phosphor-dim);
+    filter: blur(0.4px);
+  }
+
+  .timer.idle{
+    color: #384254;
+    text-shadow: none;
+  }
+
+  .status-line{
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--muted);
+    min-height: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  .controls{
+    margin-top: 22px;
+    display: flex;
+    gap: 10px;
+  }
+
+  button{
+    flex: 1;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14.5px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: transform 0.12s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  button:focus-visible{
+    outline: 2px solid var(--phosphor);
+    outline-offset: 2px;
+  }
+
+  button:active{ transform: scale(0.98); }
+
+  button:disabled{
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .btn-start{
+    background: var(--phosphor);
+    color: #05130d;
+    box-shadow: 0 0 0 rgba(76,255,179,0);
+  }
+  .btn-start:not(:disabled):hover{ filter: brightness(1.08); }
+
+  .btn-stop{
+    background: var(--danger);
+    color: #240808;
+  }
+  .btn-stop:not(:disabled):hover{ filter: brightness(1.08); }
+
+  .btn-stop.armed{
+    animation: pulse 1.1s ease-in-out infinite;
+  }
+
+  @keyframes pulse{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(255,92,92,0.45); }
+    50%{ box-shadow: 0 0 0 8px rgba(255,92,92,0); }
+  }
+
+  .result{
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--panel-edge);
+    display: none;
+  }
+
+  .result.show{ display: block; }
+
+  .result-grid{
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+
+  .result-grid div{ text-align: left; }
+  .result-grid .label{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+  .result-grid .num{ font-size: 17px; font-weight: 700; }
+
+  .verdict{
+    text-align: center;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    margin-bottom: 14px;
+  }
+
+  .gauge{
+    height: 8px;
+    border-radius: 6px;
+    background: #1a2130;
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .gauge-fill{
+    height: 100%;
+    border-radius: 6px;
+    width: 0%;
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+  }
+
+  .best{
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .best .v{ color: var(--phosphor); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce){
+    .btn-stop.armed{ animation: none; }
+    .gauge-fill{ transition: none; }
+  }
+
+  @media (max-width: 420px){
+    .timer{ font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="eyebrow">Relógio Cego</div>
+    <h1>Acerte o tempo certo</h1>
+    <p class="sub">Um alvo entre 0 e 30 segundos é sorteado e mostrado na tela. O cronômetro conta 0, 1, 2... e depois some — clique em <strong>Parar</strong> quando achar que chegou no número certo.</p>
+
+    <div class="display-wrap">
+      <div class="target-row">Você precisa acertar: <span class="val" id="targetLabel">—</span></div>
+      <div class="timer idle" id="timerDisplay">0.000s</div>
+      <div class="status-line" id="statusLine">Pronto para começar</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn-start" id="startBtn">Iniciar</button>
+      <button class="btn-stop" id="stopBtn" disabled>Parar</button>
+    </div>
+
+    <div class="result" id="resultPanel">
+      <div class="verdict" id="verdictLine">—</div>
+      <div class="gauge"><div class="gauge-fill" id="gaugeFill"></div></div>
+      <div class="result-grid">
+        <div><div class="label">Alvo</div><div class="num" id="resTarget">0.000s</div></div>
+        <div><div class="label">Seu tempo</div><div class="num" id="resElapsed">0.000s</div></div>
+        <div><div class="label">Diferença</div><div class="num" id="resDiff">0.000s</div></div>
+      </div>
+      <div class="best" id="bestLine"></div>
+      <button class="btn-start" id="retryBtn" style="width:100%;">Jogar de novo</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const MIN_TARGET = 0;       // segundos
+  const MAX_TARGET = 30;      // segundos
+  const VISIBLE_SECONDS = 3;  // quanto tempo o cronômetro fica visível antes de esconder
+
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const retryBtn = document.getElementById('retryBtn');
+  const timerDisplay = document.getElementById('timerDisplay');
+  const targetLabel = document.getElementById('targetLabel');
+  const statusLine = document.getElementById('statusLine');
+  const resultPanel = document.getElementById('resultPanel');
+  const verdictLine = document.getElementById('verdictLine');
+  const gaugeFill = document.getElementById('gaugeFill');
+  const resTarget = document.getElementById('resTarget');
+  const resElapsed = document.getElementById('resElapsed');
+  const resDiff = document.getElementById('resDiff');
+  const bestLine = document.getElementById('bestLine');
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let targetSeconds = 0;
+  let startTime = 0;
+  let rafId = null;
+  let scrambleId = null;
+  let running = false;
+  let hiddenPhase = false;
+  let bestDiff = null;
+
+  function formatTime(totalSeconds){
+    return totalSeconds.toFixed(3) + 's';
+  }
+
+  function randomTarget(){
+    return Math.floor(Math.random() * (MAX_TARGET - MIN_TARGET + 1)) + MIN_TARGET;
+  }
+
+  function scrambleDigits(){
+    const chars = '0123456789';
+    let out = '';
+    const pattern = timerDisplay.dataset.pattern || '0';
+    for (const ch of pattern){
+      out += /[0-9]/.test(ch) ? chars[Math.floor(Math.random() * 10)] : ch;
+    }
+    timerDisplay.textContent = out;
+  }
+
+  function setNewTarget(){
+    targetSeconds = randomTarget();
+    targetLabel.textContent = targetSeconds + 's';
+  }
+
+  function reset(){
+    setNewTarget();
+    timerDisplay.className = 'timer idle';
+    timerDisplay.textContent = '0.000s';
+    timerDisplay.dataset.pattern = '0.000s';
+    statusLine.textContent = 'Pronto para começar';
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    stopBtn.classList.remove('armed');
+    resultPanel.classList.remove('show');
+  }
+
+  function tick(){
+    const elapsed = (performance.now() - startTime) / 1000;
+
+    if (!hiddenPhase && elapsed >= VISIBLE_SECONDS){
+      hiddenPhase = true;
+      timerDisplay.classList.add('hidden-state');
+      statusLine.textContent = 'Sumiu! Clique em Parar na hora certa';
+      stopBtn.classList.add('armed');
+    }
+
+    if (hiddenPhase){
+      const pattern = formatTime(elapsed);
+      timerDisplay.dataset.pattern = pattern;
+      if (reducedMotion){
+        timerDisplay.textContent = '?.???s';
+      }
+    } else {
+      timerDisplay.textContent = formatTime(elapsed);
+      statusLine.textContent = 'Contando...';
+    }
+
+    if (running){
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function startScramble(){
+    if (reducedMotion) return;
+    scrambleId = setInterval(() => {
+      if (hiddenPhase) scrambleDigits();
+    }, 90);
+  }
+
+  function stopScramble(){
+    if (scrambleId){
+      clearInterval(scrambleId);
+      scrambleId = null;
+    }
+  }
+
+  function verdictFor(diff){
+    if (diff <= 0.3) return { text: 'PERFEITO!', color: 'var(--phosphor)' };
+    if (diff <= 1) return { text: 'Muito perto!', color: 'var(--phosphor)' };
+    if (diff <= 3) return { text: 'Quase lá', color: 'var(--amber)' };
+    return { text: 'Longe...', color: 'var(--danger)' };
+  }
+
+  startBtn.addEventListener('click', () => {
+    running = true;
+    hiddenPhase = false;
+    startTime = performance.now();
+    timerDisplay.className = 'timer';
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    resultPanel.classList.remove('show');
+    statusLine.textContent = 'Contando...';
+    startScramble();
+    rafId = requestAnimationFrame(tick);
+  });
+
+  stopBtn.addEventListener('click', () => {
+    if (!running) return;
+    running = false;
+    cancelAnimationFrame(rafId);
+    stopScramble();
+    stopBtn.disabled = true;
+    stopBtn.classList.remove('armed');
+
+    const elapsed = (performance.now() - startTime) / 1000;
+    const diff = Math.abs(elapsed - targetSeconds);
+
+    timerDisplay.classList.remove('hidden-state');
+    timerDisplay.textContent = formatTime(elapsed);
+    targetLabel.textContent = targetSeconds + 's';
+    statusLine.textContent = 'Resultado revelado';
+
+    resTarget.textContent = formatTime(targetSeconds);
+    resElapsed.textContent = formatTime(elapsed);
+    resDiff.textContent = diff.toFixed(3) + 's';
+
+    const v = verdictFor(diff);
+    verdictLine.textContent = v.text;
+    verdictLine.style.color = v.color;
+
+    const gaugePct = Math.max(0, 100 - Math.min(diff, 10) * 10);
+    gaugeFill.style.width = gaugePct + '%';
+    gaugeFill.style.background = v.color;
+
+    if (bestDiff === null || diff < bestDiff){
+      bestDiff = diff;
+    }
+    bestLine.innerHTML = 'Melhor tentativa da sessão: <span class="v">' + bestDiff.toFixed(3) + 's</span> de diferença';
+
+    resultPanel.classList.add('show');
+  });
+
+  retryBtn.addEventListener('click', reset);
+
+  reset();
+})();
+</script>
+
+</body>
+</html>
