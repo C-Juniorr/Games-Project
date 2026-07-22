@@ -25,6 +25,11 @@ def reignshotd():
 @app.route("/Gkamasutra")
 def gkamasutra():
     return render_template("roleta-kamasutra (1).html")
+
+@app.route("/jogo_tempo")
+def timegame():
+    return render_template("timegame.html")
+    
 app = app
 """if __name__ == "__main__":
     app.run(debug=True)"""
